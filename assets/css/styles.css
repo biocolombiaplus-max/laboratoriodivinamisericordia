@@ -579,3 +579,13 @@ p { margin: 0; }
 .hero-res .field input { padding-top: 12px; padding-bottom: 12px; }
 .hero-res .results-card__msg:empty { display: none; }
 .field input::placeholder { text-transform: none; }
+
+/* resaltado al llegar al formulario de resultados */
+.js-results.pulse { animation: formPulse 1.6s var(--ease); }
+@keyframes formPulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 55%, transparent), var(--shadow-lg); }
+  60% { box-shadow: 0 0 0 14px color-mix(in oklab, var(--accent) 0%, transparent), var(--shadow-lg); }
+  100% { box-shadow: var(--shadow-lg); }
+}
+/* en celular/tableta el botón lleva directo al formulario del portal: no se duplica en la portada */
+@media (max-width: 960px) { .hero__aside--card { display: none; } }

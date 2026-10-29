@@ -492,6 +492,36 @@
     D.body.classList.remove('no-scroll');
   }
   D.addEventListener('click', function (e) { if (e.target.closest('[data-close]')) closeModal(); });
+
+  /* «Consultar resultados» / «Resultados»: lleva al formulario completo en
+     pantalla, lo resalta y deja el cursor en el número de documento. Si la
+     tarjeta de la portada está visible (computador), usa esa sin desplazarse. */
+  function goToResultsForm(smooth) {
+    var hero = $('.hero-res'), r = hero && hero.getBoundingClientRect();
+    var form = hero && hero.offsetParent && r.top >= 0 && r.bottom <= window.innerHeight ? hero : $('#resultsForm');
+    if (!form) return false;
+    D.body.classList.remove('nav-open');
+    // posición real sin la animación de entrada (offsetTop ignora transform)
+    form.classList.add('in');
+    var y = 0; for (var n = form; n; n = n.offsetParent) y += n.offsetTop;
+    var top = y - $('#siteHeader').offsetHeight - 14;
+    window.scrollTo({ top: Math.max(0, top), behavior: smooth === false ? 'instant' : 'smooth' });
+    var input = $('input[name=cedula]', form);
+    var done = false, finish = function () {
+      if (done) return; done = true;
+      form.classList.remove('pulse'); void form.offsetWidth; form.classList.add('pulse');
+      if (input) input.focus({ preventScroll: true });
+    };
+    if ('onscrollend' in window && Math.abs(window.scrollY - top) > 4) {
+      window.addEventListener('scrollend', finish, { once: true });
+      setTimeout(finish, 1200);
+    } else setTimeout(finish, Math.min(900, Math.abs(window.scrollY - top) / 3 + 150));
+    return true;
+  }
+  D.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href="#results"]');
+    if (a && goToResultsForm()) { e.preventDefault(); history.replaceState(null, '', '#results'); }
+  });
   D.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
 
   /* ---------- consulta de resultados ---------- */
@@ -659,7 +689,8 @@
   window.addEventListener('scroll', onScroll, { passive: true });
   loadContent().then(function () {
     render(); onScroll();
-    if (location.hash && location.hash !== '#admin') {
+    if (location.hash === '#results') goToResultsForm(false);
+    else if (location.hash && location.hash !== '#admin') {
       var t = D.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView();
     }
     D.dispatchEvent(new Event('site:ready'));
