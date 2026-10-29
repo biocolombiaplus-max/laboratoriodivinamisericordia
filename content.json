@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updated": 1793296523833,
+    "updated": 1793296644652,
     "version": 1
   },
   "brand": {
@@ -186,7 +186,7 @@
       "eyebrow": "Nosotros",
       "title": "Ciencia, ética y misericordia al servicio de su salud",
       "text": "Somos un laboratorio clínico comprometido con la exactitud de cada resultado. Combinamos equipos automatizados de última generación, procesos estandarizados y un equipo humano que entiende que detrás de cada muestra hay una persona y una familia.",
-      "image": "https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=1200&q=80",
+      "image": "uploads/1ff06ecd14e718411fd1.webp",
       "imageMode": "frame",
       "overlay": 60,
       "mission": "Brindar resultados confiables y oportunos que apoyen decisiones médicas acertadas, con un trato cálido y humano.",
