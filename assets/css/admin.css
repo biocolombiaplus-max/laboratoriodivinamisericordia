@@ -131,3 +131,9 @@ body.admin-on.admin-min .site-header { right: 0; }
 .adm-card--warn { border-color: #f5d48a; background: #fffaf0; }
 .adm-steps { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 6px; color: #3c4b61; font-size: 13px; }
 .adm-diag code { display: block; white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #55657c; background: #f7f9fc; padding: 8px 10px; border-radius: 8px; margin: 6px 0 2px; }
+
+.adm-gal { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.adm-gal__item { border: 1.5px solid #e4eaf2; border-radius: 12px; overflow: hidden; background: #fff; display: grid; }
+.adm-gal__item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #eef2f7; }
+.adm-gal__item input { border: 0 !important; border-top: 1px solid #eef2f7 !important; border-radius: 0 !important; padding: 8px 10px !important; font-size: 12.5px !important; }
+.adm-gal__item .adm-item__ctl { padding: 6px; justify-content: center; border-top: 1px solid #eef2f7; }

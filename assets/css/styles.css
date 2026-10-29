@@ -611,3 +611,36 @@ p { margin: 0; }
 .price--featured .price__usd { color: rgba(255, 255, 255, .75); }
 .price-note { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; text-align: center; color: var(--ink-3); font-size: .9rem; flex-wrap: wrap; }
 .price-note .ico { color: var(--accent); }
+
+/* ---------- carrusel de fotos ---------- */
+.carousel { position: relative; border-radius: 28px; overflow: hidden; aspect-ratio: 4 / 4.4; box-shadow: var(--shadow-lg); background: linear-gradient(135deg, var(--primary), var(--accent)); isolation: isolate; outline: none; }
+.carousel:focus-visible { box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 45%, transparent), var(--shadow-lg); }
+.carousel__track { position: absolute; inset: 0; }
+.carousel__slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity 1s var(--ease); }
+.carousel__slide.is-active { opacity: 1; z-index: 1; }
+.carousel__slide img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.08); transition: transform 6s linear; }
+.carousel__slide.is-active img { transform: scale(1); }
+.carousel__slide figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 24px 52px; color: #fff; font-weight: 700; font-size: 1.05rem;
+  background: linear-gradient(to top, rgba(6, 18, 36, .78), rgba(6, 18, 36, 0)); }
+.carousel__bar { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: rgba(255, 255, 255, .25); z-index: 3; }
+.carousel__bar i { display: block; height: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }
+.carousel__count { position: absolute; top: 16px; right: 16px; z-index: 3; padding: 5px 12px; border-radius: 999px; background: rgba(6, 18, 36, .55); color: #fff; font-size: .8rem; font-weight: 600; backdrop-filter: blur(8px); }
+.carousel__nav { position: absolute; top: 50%; z-index: 3; width: 46px; height: 46px; margin-top: -23px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .4);
+  background: rgba(255, 255, 255, .18); color: #fff; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(10px); opacity: 0; transition: opacity .3s, background .2s, transform .2s; }
+.carousel__nav:hover { background: rgba(255, 255, 255, .32); }
+.carousel__nav--prev { left: 14px; } .carousel__nav--prev .ico { transform: rotate(180deg); }
+.carousel__nav--next { right: 14px; }
+.carousel:hover .carousel__nav, .carousel:focus-within .carousel__nav { opacity: 1; }
+@media (hover: none) { .carousel__nav { opacity: .9; width: 40px; height: 40px; margin-top: -20px; } }
+.carousel__dots { position: absolute; left: 0; right: 0; bottom: 18px; z-index: 3; display: flex; justify-content: center; gap: 7px; flex-wrap: wrap; padding: 0 60px; }
+.carousel__dot { width: 9px; height: 9px; padding: 0; border-radius: 999px; border: 0; background: rgba(255, 255, 255, .5); cursor: pointer; transition: width .35s var(--ease), background .3s; }
+.carousel__dot.is-active { width: 28px; background: #fff; }
+.about__media .carousel + .float-badge { z-index: 4; }
+@media (max-width: 560px) { .carousel { aspect-ratio: 4 / 3.6; border-radius: 22px; } .carousel__slide figcaption { font-size: .95rem; padding: 50px 18px 46px; } }
+/* con carrusel, el distintivo «años» pasa arriba para no tapar los puntos */
+.about__media .carousel ~ .float-badge { top: 28px; bottom: auto; right: auto; left: -18px; }
+@media (max-width: 560px) {
+  .about__media .carousel ~ .float-badge { top: 12px; left: 12px; padding: 10px 14px; gap: 10px; }
+  .about__media .carousel ~ .float-badge > .ico { width: 36px; height: 36px; padding: 8px; }
+  .about__media .carousel ~ .float-badge strong { font-size: 1rem; }
+}

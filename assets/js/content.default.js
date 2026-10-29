@@ -109,6 +109,7 @@ window.DEFAULT_CONTENT = {
       text: 'Somos un laboratorio clínico comprometido con la exactitud de cada resultado. Combinamos equipos automatizados de última generación, procesos estandarizados y un equipo humano que entiende que detrás de cada muestra hay una persona y una familia.',
       image: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=1200&q=80',
       imageMode: 'frame',
+      gallery: [],
       overlay: 60,
       mission: 'Brindar resultados confiables y oportunos que apoyen decisiones médicas acertadas, con un trato cálido y humano.',
       vision: 'Ser el laboratorio clínico de referencia en la región por su calidad, innovación y servicio al paciente.',
@@ -176,6 +177,7 @@ window.DEFAULT_CONTENT = {
       cta: 'Agendar toma a domicilio',
       image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80',
       imageMode: 'frame',
+      gallery: [],
       overlay: 60
     },
 

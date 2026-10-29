@@ -57,7 +57,8 @@
     ], blank: { icon: 'flask', title: 'Nuevo servicio', text: 'Descripción del servicio.', image: '' } } },
     about: { name: 'Nosotros', fields: COMMON.concat([
       { k: 'text', label: 'Texto principal', type: 'textarea' }, { k: 'mission', label: 'Misión', type: 'textarea' }, { k: 'vision', label: 'Visión', type: 'textarea' }
-    ]).concat(IMAGE), items: { label: 'Puntos destacados', fields: [{ k: 'text', label: 'Texto', type: 'text' }], blank: { text: 'Nuevo punto' } } },
+    ]).concat(IMAGE).concat([{ k: 'gallery', label: 'Galería de fotos (carrusel)', type: 'gallery',
+        help: 'Suba varias fotos de sus equipos e instalaciones: pasan solas en un carrusel. Si «Cómo mostrar la imagen» es «Recuadro elegante», la imagen principal es la primera foto.' }]), items: { label: 'Puntos destacados', fields: [{ k: 'text', label: 'Texto', type: 'text' }], blank: { text: 'Nuevo punto' } } },
     quality: { name: 'Por qué elegirnos', fields: COMMON.concat(IMAGE), items: { label: 'Razones', fields: [
       { k: 'icon', label: 'Icono', type: 'icon' }, { k: 'title', label: 'Título', type: 'text' }, { k: 'text', label: 'Texto', type: 'textarea' }
     ], blank: { icon: 'award', title: 'Nueva razón', text: '' } } },
@@ -76,7 +77,8 @@
     home: { name: 'Toma a domicilio', fields: [
       { k: 'eyebrow', label: 'Etiqueta superior', type: 'text' }, { k: 'title', label: 'Título', type: 'text' },
       { k: 'text', label: 'Texto', type: 'textarea' }, { k: 'cta', label: 'Texto del botón', type: 'text' }
-    ].concat(IMAGE) },
+    ].concat(IMAGE).concat([{ k: 'gallery', label: 'Galería de fotos (carrusel)', type: 'gallery',
+        help: 'Suba varias fotos de sus equipos e instalaciones: pasan solas en un carrusel. Si «Cómo mostrar la imagen» es «Recuadro elegante», la imagen principal es la primera foto.' }]) },
     team: { name: 'Equipo', fields: COMMON.concat(IMAGE), items: { label: 'Integrantes', fields: [
       { k: 'photo', label: 'Foto', type: 'image' }, { k: 'name', label: 'Nombre', type: 'text' }, { k: 'role', label: 'Cargo', type: 'text' }
     ], blank: { name: 'Nombre Apellido', role: 'Cargo', photo: '' } } },
@@ -158,7 +160,7 @@
   function setStatus(t) { var s = $('#admStatus'); if (s) s.textContent = t; }
 
   /* ---------- imágenes ---------- */
-  function compress(file, isLogo) {
+  function compress(file, isLogo, maxSide) {
     return new Promise(function (resolve, reject) {
       if (file.size > 15 * 1024 * 1024) return reject(new Error('Imagen demasiado grande (máx. 15 MB).'));
       var fr = new FileReader();
@@ -167,7 +169,7 @@
         if (/svg/.test(file.type) || (isLogo && file.size < 250 * 1024)) return resolve(fr.result);
         var img = new Image();
         img.onload = function () {
-          var max = isLogo ? 800 : 1800, w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
+          var max = maxSide || (isLogo ? 800 : 1800), w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
           var cv = D.createElement('canvas'); cv.width = Math.round(w * k); cv.height = Math.round(h * k);
           cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
           var out = cv.toDataURL('image/webp', 0.82);
@@ -180,8 +182,8 @@
       fr.readAsDataURL(file);
     });
   }
-  function upload(file, isLogo) {
-    return compress(file, isLogo).then(function (dataUrl) {
+  function upload(file, isLogo, maxSide) {
+    return compress(file, isLogo, maxSide).then(function (dataUrl) {
       // En modo GitHub la imagen se sube al publicar (un solo commit); mientras
       // tanto se conserva dentro del contenido para verla de inmediato.
       if (!server || storage === 'github') return dataUrl;
@@ -223,6 +225,14 @@
           '<div class="adm-img__ctl"><label class="adm-btn adm-btn--pri">Subir imagen<input type="file" accept="image/*" hidden></label>' +
           (v ? '<button type="button" class="adm-btn adm-btn--ghost" data-clear>Quitar</button>' : '') +
           '<input type="url" placeholder="…o pegue un enlace de imagen" value="' + (v && v.indexOf('data:') === 0 ? '' : esc(v)) + '"></div></div>'; break;
+      case 'gallery':
+        h += '<label>' + esc(f.label) + ' <b class="adm-val">' + (v || []).length + ' fotos</b></label><div class="adm-gal">' +
+          (v || []).map(function (p, i) {
+            return '<div class="adm-gal__item" data-i="' + i + '"><img src="' + esc(p.image) + '" alt="">' +
+              '<input type="text" placeholder="Nombre del equipo (opcional)" value="' + esc(p.caption) + '">' +
+              '<div class="adm-item__ctl"><button type="button" data-mv="-1" title="Mover antes">←</button><button type="button" data-mv="1" title="Mover después">→</button><button type="button" data-del title="Quitar">✕</button></div></div>';
+          }).join('') + '</div>' +
+          '<label class="adm-btn adm-btn--pri adm-btn--block">+ Agregar fotos (puede elegir varias)<input type="file" accept="image/*" multiple hidden></label>' + help; break;
       default:
         h += '<label for="' + id + '">' + esc(f.label) + '</label><input type="text" id="' + id + '" value="' + esc(v) + '">' + help;
     }
@@ -245,6 +255,30 @@
       if (f.type === 'icon') {
         $$('[data-icon]', el).forEach(function (b) {
           b.onclick = function () { $$('[data-icon]', el).forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); set(b.getAttribute('data-icon')); };
+        });
+      } else if (f.type === 'gallery') {
+        var list = obj[f.k] = Array.isArray(obj[f.k]) ? obj[f.k] : [];
+        $('input[type=file]', el).onchange = function (e) {
+          var files = Array.prototype.slice.call(e.target.files || []);
+          files.reduce(function (p, file, n) {
+            return p.then(function () {
+              setStatus('Procesando foto ' + (n + 1) + ' de ' + files.length + '…');
+              return upload(file, false, 1400).then(function (url) { list.push({ image: url, caption: '' }); });
+            });
+          }, Promise.resolve())
+            .then(function () { changed(); rerender(); })
+            .catch(function (err) { window.Site.toast(err.message, 'err'); changed(); rerender(); });
+        };
+        $$('.adm-gal__item', el).forEach(function (it) {
+          var i = +it.getAttribute('data-i');
+          $('input', it).addEventListener('input', function (e) { list[i].caption = e.target.value; changed(); });
+          $$('[data-mv]', it).forEach(function (b) {
+            b.onclick = function () {
+              var j = i + (+b.getAttribute('data-mv')); if (j < 0 || j >= list.length) return;
+              var t = list[i]; list[i] = list[j]; list[j] = t; changed(); rerender();
+            };
+          });
+          $('[data-del]', it).onclick = function () { if (confirm('¿Quitar esta foto?')) { list.splice(i, 1); changed(); rerender(); } };
         });
       } else if (f.type === 'image') {
         $('input[type=file]', el).onchange = function (e) {
@@ -545,6 +579,7 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.ok) throw new Error(d.message || 'Error al publicar');
+        if (out !== c) window.Site.content = out; // libera el espacio del navegador
         window.Site.saveLocal(); window.Site.render();
         window.Site.toast(platform === 'vercel' ? '¡Publicado! Vercel está actualizando la página: todos la verán en 1 a 2 minutos.' : '¡Cambios publicados!', 'ok'); setStatus('Publicado ' + new Date().toLocaleTimeString('es-CO'));
       })
