@@ -469,6 +469,17 @@
       window.open(wa(msg), '_blank', 'noopener');
     };
     var dot = $('#adminDot'); if (dot) dot.onclick = function () { window.Admin && window.Admin.open(); };
+    // Acceso oculto táctil: 5 toques seguidos sobre el logo del pie de página
+    // (un solo toque sigue llevando al inicio, tras una breve espera)
+    var fb = $('.brand--footer'), taps = [], tTop;
+    if (fb) fb.addEventListener('click', function (e) {
+      e.preventDefault();
+      var now = Date.now();
+      taps = taps.filter(function (t) { return now - t < 2500; }); taps.push(now);
+      clearTimeout(tTop);
+      if (taps.length >= 5) { taps = []; window.Admin && window.Admin.open(); return; }
+      if (taps.length === 1) tTop = setTimeout(function () { window.scrollTo({ top: 0, behavior: 'smooth' }); }, 700);
+    });
   }
 
   function onScroll() {

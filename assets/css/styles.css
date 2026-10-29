@@ -477,7 +477,7 @@ p { margin: 0; }
 .footer__social { display: flex; gap: 16px; margin-top: 18px; font-weight: 600; font-size: .9rem; }
 .footer__cta .btn { margin-top: 4px; }
 .footer__bottom { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 22px 24px 28px; border-top: 1px solid rgba(255, 255, 255, .1); font-size: .82rem; }
-.admin-dot { background: none; border: 0; padding: 0 4px; margin-left: 2px; color: inherit; opacity: .25; cursor: default; font-size: 1rem; line-height: 1; }
+.admin-dot { background: none; border: 0; padding: 10px 12px; margin: -10px -8px -10px 0; color: inherit; opacity: .25; cursor: default; font-size: 1rem; line-height: 1; }
 .admin-dot:hover { opacity: .5; }
 @media (max-width: 920px) { .footer { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .footer { grid-template-columns: 1fr; gap: 30px; } .site-footer { padding-top: 56px; padding-bottom: 70px; } }
