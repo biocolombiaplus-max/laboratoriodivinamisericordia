@@ -27,7 +27,7 @@ window.DEFAULT_CONTENT = {
 
   results: {
     mode: 'biosoft',
-    tenantId: '',
+    tenantId: 'lab-ms5ks1mgitl34l', // Divina Misericordia en BIOsoft
     urlTemplate: 'https://resultados.ejemplo.com/consulta?documento={cedula}&codigo={codigo}',
     apiEndpoint: '',
     openIn: 'modal',

@@ -126,8 +126,8 @@
 
   var RESULTS = [
     { k: 'mode', label: 'Modo de conexión', type: 'select', options: [['biosoft', 'BIOsoft (conexión directa, recomendado)'], ['demo', 'Demostración (resultado de ejemplo)'], ['url', 'Enlace de otro software'], ['api', 'API JSON de otro software']] },
-    { k: 'tenantId', label: 'ID del laboratorio en BIOsoft (opcional)', type: 'text', show: function (r) { return r.mode === 'biosoft'; },
-      help: 'Es el valor «t=» del enlace de la Página Web en BIOsoft (Configuración → Página Web). Si lo llena, solo se muestran resultados de este laboratorio y puede importar la marca con el botón de abajo.' },
+    { k: 'tenantId', label: 'Laboratorio en BIOsoft', type: 'text', show: function (r) { return r.mode === 'biosoft'; },
+      help: 'Pegue aquí el enlace de su Página Web de BIOsoft (Configuración → Página Web → Copiar enlace) o solo el ID «lab-…». Así la página muestra únicamente resultados de este laboratorio.' },
     { k: 'urlTemplate', label: 'Enlace del software', type: 'textarea', show: function (r) { return r.mode === 'url'; },
       help: 'Use {cedula}, {codigo} y {tipo} donde van los datos del paciente. Ej: https://software.com/resultados?doc={cedula}&clave={codigo}' },
     { k: 'openIn', label: 'Abrir resultados en', type: 'select', options: [['modal', 'Ventana dentro de la página'], ['tab', 'Pestaña nueva']], show: function (r) { return r.mode === 'url'; } },
@@ -225,6 +225,7 @@
       var el = $('.adm-field[data-k="' + f.k + '"]', root);
       if (!el) return;
       function set(val) {
+        if (f.k === 'tenantId') val = window.BIOSOFT.tenantId(val) || String(val).trim();
         obj[f.k] = val; changed();
         if (defs.some(function (d) { return d.show; })) $$('.adm-field[data-cond]', root).forEach(function (n) {
           var d = defs.filter(function (x) { return x.k === n.getAttribute('data-k'); })[0];
@@ -324,19 +325,22 @@
     var c = C(), r = c.results;
     var host = location.hostname;
     var local = /^(localhost|127\.|0\.0\.0\.0|$)/.test(host) || /github\.io|netlify|vercel/.test(host);
-    var getId = (r.tenantId || '').trim()
-      ? Promise.resolve(r.tenantId.trim())
+    var tid = window.BIOSOFT.tenantId(r.tenantId);
+    var getId = tid
+      ? Promise.resolve(tid)
       : (local ? Promise.resolve(null) : window.BIOSOFT.findTenantByDomain(host));
     setStatus('Consultando BIOsoft…');
     getId.then(function (id) {
       if (!id) {
-        id = (prompt('ID del laboratorio en BIOsoft (el valor «t=» del enlace de la Página Web):') || '').trim();
-        if (!id) throw new Error('cancel');
+        var typed = prompt('Pegue el enlace de la Página Web de BIOsoft o el ID del laboratorio:') || '';
+        if (!typed.trim()) throw new Error('cancel');
+        id = window.BIOSOFT.tenantId(typed);
+        if (!id) throw new Error('Ese enlace o ID no es válido. Debe contener «?t=lab-…».');
       }
       return window.BIOSOFT.getSite(id).then(function (d) { return { id: id, d: d }; });
     }).then(function (res) {
       var d = res.d;
-      if (!d) throw new Error('No se encontró la Página Web de ese laboratorio en BIOsoft.');
+      if (!d) throw new Error('BIOsoft no tiene una Página Web con el ID «' + res.id + '». Revise el enlace en BIOsoft → Configuración → Página Web.');
       if (!confirm('Se encontró «' + (d.nombre || 'Laboratorio') + '» en BIOsoft. ¿Importar su logo, datos y contenido? Lo que no tenga dato en BIOsoft se conserva.')) throw new Error('cancel');
       var b = c.brand, S = c.sections;
       r.tenantId = res.id;

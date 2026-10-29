@@ -573,7 +573,7 @@
 
     if (r.mode === 'biosoft' && window.BIOSOFT) {
       btn.disabled = true; btn.classList.add('loading');
-      window.BIOSOFT.getResult(cod, ced, (r.tenantId || '').trim())
+      window.BIOSOFT.getResult(cod, ced, r.tenantId)
         .then(function (d) {
           if (!d) { addAttempt(); return fail('No encontramos un resultado con esos datos. Verifique su número de documento y el código de su comprobante.'); }
           showBiosoft(d);

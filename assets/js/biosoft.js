@@ -43,16 +43,26 @@
     });
   }
 
+  /* Acepta el ID («lab-xxxx») o el enlace completo de la Página Web de
+     BIOsoft (…/sitio-web.html?t=lab-xxxx) y devuelve solo el ID. */
+  function tenantId(v) {
+    v = String(v || '').trim();
+    var m = v.match(/[?&]t=([^&#\s]+)/);
+    if (m) v = decodeURIComponent(m[1]);
+    return /^[A-Za-z0-9_-]{3,80}$/.test(v) ? v : '';
+  }
+
   function normDoc(v) { return String(v || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
 
   /* Devuelve el resultado si el código existe Y el documento coincide;
      null en cualquier otro caso (sin revelar cuál de los dos falló). */
-  function getResult(codigo, documento, tenantId) {
+  function getResult(codigo, documento, tenant) {
+    var tid = tenantId(tenant);
     var cod = String(codigo || '').trim().toUpperCase();
     if (!/^[A-Z0-9-]{3,40}$/.test(cod)) return Promise.resolve(null);
     return getDoc('resultadosPublicos/' + encodeURIComponent(cod)).then(function (d) {
       if (!d || normDoc(d.numeroDocumento) !== normDoc(documento)) return null;
-      if (tenantId && d.tenantId && d.tenantId !== tenantId) return null;
+      if (tid && d.tenantId && d.tenantId !== tid) return null;
       d.codigo = cod;
       return d;
     });
@@ -81,9 +91,10 @@
       });
   }
 
-  function getSite(tenantId) {
-    if (!tenantId) return Promise.resolve(null);
-    return getDoc('demoSitioWeb/' + encodeURIComponent(tenantId));
+  function getSite(tenant) {
+    var tid = tenantId(tenant);
+    if (!tid) return Promise.resolve(null);
+    return getDoc('demoSitioWeb/' + encodeURIComponent(tid));
   }
 
   /* Convierte un dataURL de PDF en un blob: URL (los navegadores bloquean
@@ -96,7 +107,7 @@
   }
 
   window.BIOSOFT = {
-    getResult: getResult, getPdf: getPdf, getSite: getSite,
+    getResult: getResult, getPdf: getPdf, getSite: getSite, tenantId: tenantId,
     findTenantByDomain: findTenantByDomain, pdfBlobUrl: pdfBlobUrl
   };
 })();
