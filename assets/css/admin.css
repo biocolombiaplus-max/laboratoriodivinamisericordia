@@ -130,3 +130,4 @@ body.admin-on.admin-min .site-header { right: 0; }
 
 .adm-card--warn { border-color: #f5d48a; background: #fffaf0; }
 .adm-steps { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 6px; color: #3c4b61; font-size: 13px; }
+.adm-diag code { display: block; white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #55657c; background: #f7f9fc; padding: 8px 10px; border-radius: 8px; margin: 6px 0 2px; }

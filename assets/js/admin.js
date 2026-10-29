@@ -438,6 +438,9 @@
         '<li>En <b>vercel.com</b> → su proyecto → <b>Settings</b> → <b>Environment Variables</b> → nombre <b>GITHUB_TOKEN</b>, valor: el código → <b>Save</b>.</li>' +
         '<li><b>Deployments</b> → menú «⋯» del último → <b>Redeploy</b>. Luego recargue esta página: aquí aparecerá 🟢.</li></ol></div>'
       : '';
+    if (!server && platform !== 'vercel' && /vercel\.app$/.test(location.hostname)) {
+      vercelSetup = '<div class="adm-card adm-card--warn"><h4>⚠️ El servidor de Vercel no respondió</h4><p>La función <code>api/admin</code> no está activa en este despliegue. En Vercel abra <b>Deployments</b>, entre al último y revise que diga <b>Ready</b> (no «Error»); luego <b>⋯ → Redeploy</b>. Si sigue igual, envíe una captura de este recuadro a soporte.</p></div>';
+    }
     body.innerHTML = vercelSetup +
       '<div class="adm-card"><h4>' + (server ? '🟢 Publicación conectada' + (platform === 'vercel' ? (storage === 'github' ? ' (Vercel + GitHub)' : ' (Vercel)') : '') : '🟡 Modo navegador') + '</h4><p>' +
       (server ? 'Al pulsar «Publicar cambios», todos los visitantes verán la página actualizada' + (platform === 'vercel' ? ' en 1 a 2 minutos.' : ' de inmediato.')
@@ -449,11 +452,16 @@
         ? '<div class="adm-card"><h4>Cambiar clave de acceso</h4><p>En Vercel la clave se guarda de forma segura en el servidor: proyecto → <b>Settings</b> → <b>Environment Variables</b> → agregue <b>ADMIN_PASSWORD</b> con la nueva clave → <b>Save</b> → <b>Redeploy</b>.</p></div>'
         : '<div class="adm-card"><h4>Cambiar clave de acceso</h4><div class="adm-field"><input type="password" id="admNewPass" placeholder="Nueva clave (mín. 6 caracteres)" autocomplete="new-password"></div>' +
           '<button type="button" class="adm-btn adm-btn--ghost adm-btn--block" id="admSavePass">Guardar nueva clave</button></div>') +
+      '<div class="adm-card adm-diag"><h4>Diagnóstico de conexión</h4><code>' + esc(diag.join('\n') || 'sin datos') + '</code>' +
+      '<button type="button" class="adm-btn adm-btn--ghost adm-btn--block" id="admRecheck">Volver a comprobar</button></div>' +
       '<div class="adm-card adm-card--danger"><h4>Zona de cuidado</h4>' +
       '<button type="button" class="adm-btn adm-btn--ghost adm-btn--block" id="admDiscard">Descartar cambios no publicados</button>' +
       '<button type="button" class="adm-btn adm-btn--danger adm-btn--block" id="admReset">Restaurar contenido de ejemplo</button></div>';
 
     var pub = $('#admPublish'); if (pub) pub.onclick = publish;
+    $('#admRecheck').onclick = function () {
+      checkServer().then(function () { setStatus(server ? 'Publicación conectada' : 'Sin publicación en servidor'); draw(); });
+    };
     $('#admExport').onclick = function () {
       var blob = new Blob([JSON.stringify(C(), null, 2)], { type: 'application/json' });
       var a = D.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'content.json'; a.click();
@@ -596,12 +604,20 @@
   }
 
   /* ---------- acceso ---------- */
+  var diag = [];  // resultado de cada comprobación, visible en la pestaña Publicar
   function ping(url) {
     return fetch(url + '?ping=1', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .catch(function () { return null; });
+      .then(function (r) {
+        return r.text().then(function (t) {
+          var d = null; try { d = JSON.parse(t); } catch (e) { /* no es JSON */ }
+          diag.push(url + ' → HTTP ' + r.status + (d ? ' ' + JSON.stringify(d) : ' (sin respuesta JSON)'));
+          return r.ok ? d : null;
+        });
+      })
+      .catch(function (e) { diag.push(url + ' → sin conexión (' + (e && e.message) + ')'); return null; });
   }
   function checkServer() {
+    diag = [];
     return ping('api/admin').then(function (d) {
       if (d && d.platform === 'vercel') { API = 'api/admin'; platform = 'vercel'; server = !!d.ok; storage = d.storage || (d.blob ? 'blob' : ''); return; }
       return ping('api/save.php').then(function (d2) {
