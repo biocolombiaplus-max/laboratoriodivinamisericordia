@@ -41,7 +41,7 @@
     t.textContent = msg;
     t.className = 'toast show ' + (type || '');
     clearTimeout(toast._t);
-    toast._t = setTimeout(function () { t.className = 'toast'; }, 3200);
+    toast._t = setTimeout(function () { t.className = 'toast'; }, type === 'err' ? 8000 : 3200);
   }
 
   /* ---------- contenido ---------- */
@@ -578,7 +578,11 @@
           if (!d) { addAttempt(); return fail('No encontramos un resultado con esos datos. Verifique su número de documento y el código de su comprobante.'); }
           showBiosoft(d);
         })
-        .catch(function () { fail('No pudimos consultar su resultado en este momento. Intente de nuevo en unos minutos o escríbanos por WhatsApp.'); })
+        .catch(function (err) {
+          fail(err && err.status === 429
+            ? 'El sistema de resultados está recibiendo demasiadas consultas en este momento. Intente más tarde o escríbanos por WhatsApp y se lo enviamos.'
+            : 'No pudimos consultar su resultado en este momento. Intente de nuevo en unos minutos o escríbanos por WhatsApp.');
+        })
         .then(function () { btn.disabled = false; btn.classList.remove('loading'); });
       return;
     }

@@ -38,7 +38,7 @@
   function getDoc(path) {
     return fetch(BASE + '/' + path + '?key=' + KEY, { cache: 'no-store' }).then(function (r) {
       if (r.status === 404) return null;
-      if (!r.ok) throw new Error('http_' + r.status);
+      if (!r.ok) { var e = new Error('http_' + r.status); e.status = r.status; throw e; }
       return r.json().then(function (d) { return fields(d.fields); });
     });
   }

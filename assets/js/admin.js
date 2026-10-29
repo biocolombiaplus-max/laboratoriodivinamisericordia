@@ -384,7 +384,12 @@
       window.Site.toast('Contenido importado desde BIOsoft', 'ok');
     }).catch(function (e) {
       setStatus('');
-      if (e && e.message !== 'cancel') window.Site.toast(e.message && e.message.indexOf('http_') !== 0 ? e.message : 'No se pudo conectar con BIOsoft.', 'err');
+      if (!e || e.message === 'cancel') return;
+      var msg = e.status === 429 ? 'BIOsoft (Firebase) agotó su cuota diaria de lecturas (error 429). Se restablece a las 2:00 a. m. (hora Colombia) o al activar el plan Blaze en Firebase.'
+        : e.status === 403 ? 'Firebase rechazó la consulta desde este dominio (error 403). Agregue el dominio a la clave web en Google Cloud → Credenciales.'
+        : e.status ? 'BIOsoft respondió con error ' + e.status + '.'
+        : e.message && e.message.indexOf('http_') !== 0 ? e.message : 'No se pudo conectar con BIOsoft (revise su internet).';
+      window.Site.toast(msg, 'err');
     });
   }
 
