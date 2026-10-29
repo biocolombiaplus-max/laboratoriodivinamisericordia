@@ -12,10 +12,11 @@
   var $ = function (s, r) { return (r || D).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || D).querySelectorAll(s)); };
   var esc = function (v) { return window.Site.esc(v); };
-  var API = 'api/save.php';
+  var API = 'api/save.php';  // se reemplaza por api/admin en Vercel (ver checkServer)
   var PASS_KEY = 'dm_admin_pass';
   var SESSION_KEY = 'dm_admin';
-  var server = false;      // true si api/save.php responde (hosting con PHP)
+  var server = false;      // true si se puede publicar en el servidor (PHP o Vercel Blob)
+  var platform = '';       // 'vercel' | 'php' | ''
   var pass = '';           // clave usada en esta sesión, se envía al servidor al publicar
   var current = 'hero';    // sección abierta en el editor
   var tab = 'sections';
@@ -417,15 +418,25 @@
   }
 
   function renderPublish(body) {
-    body.innerHTML =
-      '<div class="adm-card"><h4>' + (server ? '🟢 Servidor conectado' : '🟡 Modo navegador') + '</h4><p>' +
-      (server ? 'Al publicar, todos los visitantes verán los cambios de inmediato.'
-        : 'Los cambios se guardan solo en este navegador. Para que los vean los visitantes, descargue el archivo <b>content.json</b> y súbalo a la carpeta del sitio (o aloje la página en un hosting con PHP para publicar con un clic).') +
+    var vercelSetup = platform === 'vercel' && !server
+      ? '<div class="adm-card adm-card--warn"><h4>⚙️ Active «Publicar» en Vercel (una sola vez)</h4><ol class="adm-steps">' +
+        '<li>Entre a <b>vercel.com</b> → su proyecto → pestaña <b>Storage</b>.</li>' +
+        '<li>Pulse <b>Create Database</b> → elija <b>Blob</b> → acceso <b>Public</b> → <b>Create</b>.</li>' +
+        '<li>Cuando pregunte, conéctelo a este proyecto (todos los entornos) → <b>Connect</b>.</li>' +
+        '<li>Vaya a <b>Deployments</b> → menú «⋯» del último → <b>Redeploy</b>.</li>' +
+        '<li>Recargue esta página e inicie sesión de nuevo: aquí aparecerá 🟢.</li></ol></div>'
+      : '';
+    body.innerHTML = vercelSetup +
+      '<div class="adm-card"><h4>' + (server ? '🟢 Publicación conectada' + (platform === 'vercel' ? ' (Vercel)' : '') : '🟡 Modo navegador') + '</h4><p>' +
+      (server ? 'Al pulsar «Publicar cambios», todos los visitantes verán la página actualizada' + (platform === 'vercel' ? ' en 1 a 2 minutos.' : ' de inmediato.')
+        : 'Los cambios se guardan solo en este navegador. Para que los vean los visitantes, descargue el archivo <b>content.json</b> y súbalo a la carpeta del sitio.') +
       '</p>' + (server ? '<button type="button" class="adm-btn adm-btn--pri adm-btn--block" id="admPublish">Publicar cambios</button>' : '') +
       '<button type="button" class="adm-btn adm-btn--block ' + (server ? 'adm-btn--ghost' : 'adm-btn--pri') + '" id="admExport">Descargar content.json</button>' +
       '<label class="adm-btn adm-btn--ghost adm-btn--block">Importar content.json<input type="file" accept="application/json,.json" hidden id="admImport"></label></div>' +
-      '<div class="adm-card"><h4>Cambiar clave de acceso</h4><div class="adm-field"><input type="password" id="admNewPass" placeholder="Nueva clave (mín. 6 caracteres)" autocomplete="new-password"></div>' +
-      '<button type="button" class="adm-btn adm-btn--ghost adm-btn--block" id="admSavePass">Guardar nueva clave</button></div>' +
+      (platform === 'vercel'
+        ? '<div class="adm-card"><h4>Cambiar clave de acceso</h4><p>En Vercel la clave se guarda de forma segura en el servidor: proyecto → <b>Settings</b> → <b>Environment Variables</b> → agregue <b>ADMIN_PASSWORD</b> con la nueva clave → <b>Save</b> → <b>Redeploy</b>.</p></div>'
+        : '<div class="adm-card"><h4>Cambiar clave de acceso</h4><div class="adm-field"><input type="password" id="admNewPass" placeholder="Nueva clave (mín. 6 caracteres)" autocomplete="new-password"></div>' +
+          '<button type="button" class="adm-btn adm-btn--ghost adm-btn--block" id="admSavePass">Guardar nueva clave</button></div>') +
       '<div class="adm-card adm-card--danger"><h4>Zona de cuidado</h4>' +
       '<button type="button" class="adm-btn adm-btn--ghost adm-btn--block" id="admDiscard">Descartar cambios no publicados</button>' +
       '<button type="button" class="adm-btn adm-btn--danger adm-btn--block" id="admReset">Restaurar contenido de ejemplo</button></div>';
@@ -445,7 +456,7 @@
         changed(); draw(); window.Site.toast('Contenido importado', 'ok');
       }).catch(function () { window.Site.toast('El archivo no es un content.json válido.', 'err'); });
     };
-    $('#admSavePass').onclick = function () {
+    if ($('#admSavePass')) $('#admSavePass').onclick = function () {
       var np = $('#admNewPass').value;
       if (np.length < 6) return window.Site.toast('La clave debe tener al menos 6 caracteres.', 'err');
       var done = function () { try { localStorage.setItem(PASS_KEY, np); } catch (e) { /* noop */ } pass = np; $('#admNewPass').value = ''; window.Site.toast('Clave actualizada', 'ok'); };
@@ -464,15 +475,42 @@
     };
   }
 
+  /* Las imágenes guardadas dentro del contenido (subidas sin servidor o
+     importadas de BIOsoft) se suben primero como archivos, para que el
+     contenido publicado quede liviano. */
+  function externalizeImages(c, btn) {
+    var refs = [];
+    (function walk(o) {
+      Object.keys(o).forEach(function (k) {
+        var v = o[k];
+        if (typeof v === 'string' && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(v)) refs.push({ o: o, k: k });
+        else if (v && typeof v === 'object') walk(v);
+      });
+    })(c);
+    return refs.reduce(function (p, ref, i) {
+      return p.then(function () {
+        btn.textContent = 'Subiendo imágenes ' + (i + 1) + '/' + refs.length + '…';
+        return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'upload', pass: pass, name: 'imagen', data: ref.o[ref.k] }) })
+          .then(function (r) { return r.json(); })
+          .then(function (d) { if (d.ok && d.url) ref.o[ref.k] = d.url; else throw new Error(d.message || 'No se pudo subir una imagen'); });
+      });
+    }, Promise.resolve());
+  }
+
   function publish() {
     var btn = $('#admPublish'); btn.disabled = true; btn.textContent = 'Publicando…';
-    var c = C(); c.meta.updated = Date.now();
-    fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save', pass: pass, content: c }) })
+    var c = C();
+    externalizeImages(c, btn)
+      .then(function () {
+        btn.textContent = 'Publicando…';
+        c.meta.updated = Date.now();
+        return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save', pass: pass, content: c }) });
+      })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.ok) throw new Error(d.message || 'Error al publicar');
-        window.Site.saveLocal();
-        window.Site.toast('¡Cambios publicados!', 'ok'); setStatus('Publicado ' + new Date().toLocaleTimeString('es-CO'));
+        window.Site.saveLocal(); window.Site.render();
+        window.Site.toast(platform === 'vercel' ? '¡Publicado! Los visitantes lo verán en 1 a 2 minutos.' : '¡Cambios publicados!', 'ok'); setStatus('Publicado ' + new Date().toLocaleTimeString('es-CO'));
       })
       .catch(function (e) { window.Site.toast(e.message, 'err'); })
       .then(function () { btn.disabled = false; btn.textContent = 'Publicar cambios'; });
@@ -494,7 +532,7 @@
     D.body.classList.add('admin-on');
     var root = $('#adminRoot');
     root.innerHTML = '<aside class="adm" id="admPanel" aria-label="Panel administrativo">' +
-      '<header class="adm-head"><div><strong>Panel administrativo</strong><small id="admStatus">' + (server ? 'Servidor conectado' : 'Modo navegador') + '</small></div>' +
+      '<header class="adm-head"><div><strong>Panel administrativo</strong><small id="admStatus">' + (server ? 'Publicación conectada' : platform === 'vercel' ? 'Falta activar «Publicar» (ver pestaña Publicar)' : 'Modo navegador') + '</small></div>' +
       '<div class="adm-head__ctl"><button type="button" class="adm-icon-btn" id="admMin" title="Minimizar">–</button><button type="button" class="adm-icon-btn" id="admOut" title="Cerrar sesión">⏻</button></div></header>' +
       '<nav class="adm-tabs">' + TABS.map(function (t) { return '<button type="button" data-tab="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</nav>' +
       '<div class="adm-body"></div>' +
@@ -537,11 +575,18 @@
   }
 
   /* ---------- acceso ---------- */
-  function checkServer() {
-    return fetch(API + '?ping=1', { cache: 'no-store' })
+  function ping(url) {
+    return fetch(url + '?ping=1', { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { server = !!(d && d.ok); })
-      .catch(function () { server = false; });
+      .catch(function () { return null; });
+  }
+  function checkServer() {
+    return ping('api/admin').then(function (d) {
+      if (d && d.platform === 'vercel') { API = 'api/admin'; platform = 'vercel'; server = !!d.ok; return; }
+      return ping('api/save.php').then(function (d2) {
+        API = 'api/save.php'; server = !!(d2 && d2.ok); platform = server ? 'php' : '';
+      });
+    });
   }
 
   function localPass() {
@@ -549,7 +594,7 @@
   }
 
   function login(p) {
-    if (server) {
+    if (server || platform === 'vercel') {
       return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'login', pass: p }) })
         .then(function (r) { return r.json(); }).then(function (d) { return !!d.ok; }).catch(function () { return false; });
     }

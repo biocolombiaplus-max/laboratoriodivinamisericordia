@@ -56,9 +56,18 @@
 
   function loadContent() {
     var base = clone(window.DEFAULT_CONTENT);
-    return fetch('content.json?v=' + Date.now(), { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .catch(function () { return null; })
+    // Contenido publicado: Vercel (api/content, desde Blob) o content.json
+    // (hosting con PHP o archivo subido a mano). Gana el más reciente.
+    function get(url) {
+      return fetch(url, { cache: 'no-store' })
+        .then(function (r) { return r.ok && /json/.test(r.headers.get('content-type') || '') ? r.json() : null; })
+        .catch(function () { return null; });
+    }
+    return Promise.all([get('api/content'), get('content.json?v=' + Date.now())])
+      .then(function (a) {
+        var t = function (x) { return x && x.sections && x.meta ? x.meta.updated || 0 : -1; };
+        return t(a[0]) >= t(a[1]) && t(a[0]) >= 0 ? a[0] : (t(a[1]) >= 0 ? a[1] : null);
+      })
       .then(function (pub) {
         if (pub) merge(base, pub);
         try {

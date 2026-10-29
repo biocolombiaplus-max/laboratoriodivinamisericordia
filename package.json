@@ -1,0 +1,8 @@
+{
+  "name": "laboratorio-divina-misericordia",
+  "private": true,
+  "description": "Sitio web del Laboratorio Clínico Divina Misericordia",
+  "dependencies": {
+    "@vercel/blob": "2.8.2"
+  }
+}
