@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updated": 1793302285151,
+    "updated": 1793302334804,
     "version": 1
   },
   "brand": {
@@ -471,7 +471,7 @@
       "eyebrow": "Cómo llegar",
       "title": "Visítenos",
       "subtitle": "Estamos ubicados en una zona de fácil acceso, con parqueadero cercano.",
-      "mapUrl": "",
+      "mapUrl": "https://www.google.com/maps/place/LABORATORIO+Cl%C3%ADnico+Divina+Misericordia/@7.7024246,-72.3593453,17z/data=!3m1!4b1!4m6!3m5!1s0x8e663f0052744355:0x507d0605525e883b!8m2!3d7.7024246!4d-72.3593453!16s%2Fg%2F11xn9pngz7?entry=ttu&g_ep=EgoyMDI2MTAyMC4wIKXMDSoASAFQAw%3D%3D",
       "image": "uploads/756223215d52dedb500a.webp",
       "imageMode": "frame",
       "overlay": 60,
