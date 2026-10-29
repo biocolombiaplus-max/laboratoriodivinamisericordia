@@ -53,6 +53,12 @@
   }
 
   function normDoc(v) { return String(v || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
+  /* «V-12.345.678», «v12345678» y «12345678» son el mismo documento */
+  function sameDoc(a, b) {
+    a = normDoc(a); b = normDoc(b);
+    var strip = function (x) { return x.replace(/^[VEPJG](?=\d)/, ''); };
+    return !!a && (a === b || strip(a) === strip(b));
+  }
 
   /* Devuelve el resultado si el código existe Y el documento coincide;
      null en cualquier otro caso (sin revelar cuál de los dos falló). */
@@ -61,7 +67,7 @@
     var cod = String(codigo || '').trim().toUpperCase();
     if (!/^[A-Z0-9-]{3,40}$/.test(cod)) return Promise.resolve(null);
     return getDoc('resultadosPublicos/' + encodeURIComponent(cod)).then(function (d) {
-      if (!d || normDoc(d.numeroDocumento) !== normDoc(documento)) return null;
+      if (!d || !sameDoc(d.numeroDocumento, documento)) return null;
       if (tid && d.tenantId && d.tenantId !== tid) return null;
       d.codigo = cod;
       return d;

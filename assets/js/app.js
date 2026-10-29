@@ -30,6 +30,7 @@
   function cssUrl(u) { return 'url("' + String(u).replace(/["\\\n\r]/g, encodeURIComponent) + '")'; }
   function wa(text) {
     var n = String(C.brand.whatsapp || '').replace(/\D/g, '');
+    if (/^0\d{10}$/.test(n)) n = '58' + n.slice(1); // 0412… → 58412…
     return 'https://wa.me/' + n + (text ? '?text=' + encodeURIComponent(text) : '');
   }
   function initials(name) {
@@ -48,6 +49,7 @@
   var C = clone(window.DEFAULT_CONTENT);
 
   function normalize(c) {
+    if (window.migrateContent) window.migrateContent(c);
     var keys = Object.keys(window.DEFAULT_CONTENT.sections);
     c.order = (c.order || []).filter(function (k) { return keys.indexOf(k) > -1; });
     keys.forEach(function (k) { if (c.order.indexOf(k) < 0) c.order.push(k); });
@@ -145,6 +147,12 @@
           : '<span class="hero__logo-fallback" style="--s:' + (+b.logoHero || 120) + 'px">' + logoMark('mark--xl') + '<span><strong>' + esc(b.short || b.name) + '</strong><small>' + esc(b.tagline) + '</small></span></span>') +
         '</div>';
     }
+    if (b.rif || b.legend) {
+      logoHtml += '<div class="hero__ident hero__ident--' + esc(pos === 'side' ? 'center' : (b.logoHeroAlign || 'left')) + '">' +
+        (b.rif ? '<span class="hero__rif">' + icon('shield') + 'RIF ' + esc(b.rif) + '</span>' : '') +
+        (b.legend ? '<p class="hero__legend">' + esc(b.legend) + '</p>' : '') + '</div>';
+    }
+    if (logoHtml) logoHtml = '<div class="hero__brandblock">' + logoHtml + '</div>';
     var badges = (s.items || []).map(function (it) {
       return '<li>' + icon('check') + '<span>' + esc(it.text) + '</span></li>';
     }).join('');
@@ -184,10 +192,10 @@
   function resultsMini() {
     return '<form class="hero-res js-results" novalidate autocomplete="off">' +
       '<div class="hero-res__head"><span class="hero-res__ico">' + icon('lock') + '</span><div><strong>Consulte sus resultados</strong><small>Acceso seguro y confidencial</small></div></div>' +
-      '<div class="field"><label for="hDoc">Número de documento</label><div class="input-ico">' + icon('id') + '<input id="hDoc" name="cedula" inputmode="numeric" placeholder="Ej: 1020304050" required maxlength="20"></div></div>' +
+      '<div class="field"><label for="hDoc">Número de documento</label><div class="input-ico">' + icon('id') + '<input id="hDoc" name="cedula" inputmode="numeric" placeholder="Ej: 12345678" required maxlength="20"></div></div>' +
       '<div class="field"><label for="hCode">Código de consulta</label><div class="input-ico">' + icon('key') + '<input id="hCode" name="codigo" placeholder="Código de 6 dígitos" required maxlength="40" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase"></div>' +
       '<small class="hint">Lo encuentra en el comprobante que le entregamos.</small></div>' +
-      '<label class="check"><input type="checkbox" name="ok" required><span>Autorizo el tratamiento de mis datos (Ley 1581 de 2012).</span></label>' +
+      '<label class="check"><input type="checkbox" name="ok" required><span>Autorizo el uso de mis datos para consultar mis resultados.</span></label>' +
       '<button class="btn btn--accent btn--block btn--lg" type="submit">' + icon('file') + '<span>Ver mis resultados</span></button>' +
       '<p class="results-card__msg js-rmsg" role="alert"></p>' +
       '</form>';
@@ -210,12 +218,12 @@
     var form = '<form class="results-card reveal js-results" id="resultsForm" novalidate autocomplete="off">' +
       '<div class="results-card__head"><span class="results-card__ico">' + icon('lock') + '</span><div><h3>Acceso a resultados</h3><p>Sus datos están protegidos</p></div></div>' +
       '<div class="field"><label for="rTipo">Tipo de documento</label><div class="select-wrap"><select id="rTipo" name="tipo">' +
-      '<option value="CC">Cédula de ciudadanía</option><option value="TI">Tarjeta de identidad</option><option value="RC">Registro civil</option><option value="CE">Cédula de extranjería</option><option value="PA">Pasaporte</option><option value="PPT">Permiso de protección temporal</option>' +
+      '<option value="V">Cédula venezolana (V)</option><option value="E">Cédula de extranjero (E)</option><option value="P">Pasaporte</option><option value="M">Menor de edad (cédula del representante)</option>' +
       '</select></div></div>' +
-      '<div class="field"><label for="rDoc">Número de documento</label><div class="input-ico">' + icon('id') + '<input id="rDoc" name="cedula" inputmode="numeric" placeholder="Ej: 1020304050" required maxlength="20"></div></div>' +
+      '<div class="field"><label for="rDoc">Número de documento</label><div class="input-ico">' + icon('id') + '<input id="rDoc" name="cedula" inputmode="numeric" placeholder="Ej: 12345678" required maxlength="20"></div></div>' +
       '<div class="field"><label for="rCode">Código de consulta</label><div class="input-ico">' + icon('key') + '<input id="rCode" name="codigo" placeholder="Código de su comprobante" required maxlength="40" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase"></div>' +
       (r.help ? '<small class="hint">' + esc(r.help) + '</small>' : '') + '</div>' +
-      '<label class="check"><input type="checkbox" id="rOk" name="ok" required><span>Autorizo el tratamiento de mis datos personales según la Ley 1581 de 2012.</span></label>' +
+      '<label class="check"><input type="checkbox" id="rOk" name="ok" required><span>Autorizo el uso de mis datos personales para consultar mis resultados, conforme a la Constitución (arts. 28 y 60).</span></label>' +
       '<button class="btn btn--accent btn--block btn--lg" type="submit" id="rBtn">' + icon('file') + '<span>Consultar resultados</span></button>' +
       '<p class="results-card__msg js-rmsg" id="rMsg" role="alert"></p>' +
       '</form>';
@@ -263,18 +271,40 @@
     return shell('process', s, head(s) + bannerIfFrame(s) + '<ol class="steps">' + steps + '</ol>');
   };
 
+  function num(v) {
+    var t = String(v == null ? '' : v).replace(/[^\d.,]/g, '');
+    if (!t) return NaN;
+    if (t.indexOf(',') > -1) t = t.replace(/\./g, '').replace(',', '.'); // 1.250,50
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');   // 1.250
+    return parseFloat(t);
+  }
+  function fmt(n) { return n.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  /* Precio en bolívares (grande) y dólares (debajo). Los bolívares se
+     calculan con la tasa del día, o se usan los escritos a mano. */
+  function prices(it, rate) {
+    var usd = num(it.priceUsd), bs = '';
+    if (String(it.price || '').trim()) bs = /bs/i.test(it.price) ? String(it.price).trim() : 'Bs. ' + String(it.price).trim();
+    else if (!isNaN(usd) && !isNaN(rate) && rate > 0) bs = 'Bs. ' + fmt(usd * rate);
+    return { bs: bs, usd: isNaN(usd) ? '' : '$ ' + fmt(usd) };
+  }
+
   R.packages = function (s) {
+    var rate = num(s.rate);
     var cards = (s.items || []).map(function (it, i) {
+      var p = prices(it, rate), label = p.bs ? p.bs + (p.usd ? ' / ' + p.usd : '') : p.usd;
       var lis = String(it.includes || '').split('\n').filter(Boolean).map(function (l) { return '<li>' + icon('check') + esc(l) + '</li>'; }).join('');
       var feat = it.featured === true || it.featured === 'true';
       return '<article class="price reveal' + (feat ? ' price--featured' : '') + '" style="--d:' + i * 80 + 'ms">' +
         (feat ? '<span class="price__tag">Más elegido</span>' : '') +
-        '<h3>' + esc(it.name) + '</h3><div class="price__amount">' + esc(it.price) + '</div>' +
+        '<h3>' + esc(it.name) + '</h3>' +
+        '<div class="price__amount">' + esc(p.bs || p.usd) + '</div>' +
+        (p.bs && p.usd ? '<div class="price__usd">' + esc(p.usd) + ' <small>USD</small></div>' : '') +
         '<ul>' + lis + '</ul>' +
-        '<a class="btn ' + (feat ? 'btn--accent' : 'btn--outline') + ' btn--block" target="_blank" rel="noopener" href="' + esc(wa('Hola, me interesa el ' + it.name + ' (' + it.price + ').')) + '">Quiero este chequeo</a>' +
+        '<a class="btn ' + (feat ? 'btn--accent' : 'btn--outline') + ' btn--block" target="_blank" rel="noopener" href="' + esc(wa('Hola, me interesa el ' + it.name + (label ? ' (' + label + ')' : '') + '.')) + '">Quiero este chequeo</a>' +
         '</article>';
     }).join('');
-    return shell('packages', s, head(s) + bannerIfFrame(s) + '<div class="grid grid--3 prices">' + cards + '</div>', { cls: 'sec--tint' });
+    var note = !isNaN(rate) && rate > 0 ? '<p class="price-note reveal">' + icon('chart') + 'Precios en bolívares a la tasa del día: <b>Bs. ' + esc(fmt(rate)) + '</b> por dólar.</p>' : '';
+    return shell('packages', s, head(s) + bannerIfFrame(s) + '<div class="grid grid--3 prices">' + cards + '</div>' + note, { cls: 'sec--tint' });
   };
 
   R.home = function (s) {
@@ -402,8 +432,8 @@
       '<div><h4>Navegación</h4><div class="footer__links">' + links + '<a href="#results">Resultados en línea</a></div></div>' +
       '<div><h4>Contacto</h4><div class="footer__links"><span>' + esc(b.address) + '</span><a href="tel:' + esc(String(b.phone).replace(/[^\d+]/g, '')) + '">' + esc(b.phone) + '</a><a href="mailto:' + esc(b.email) + '">' + esc(b.email) + '</a></div></div>' +
       '<div class="footer__cta"><h4>¿Listo para su examen?</h4><a class="btn btn--accent" target="_blank" rel="noopener" href="' + esc(wa('Hola, quiero agendar un examen.')) + '">Agendar ahora</a></div>' +
-      '</div><div class="container footer__bottom"><span>© ' + new Date().getFullYear() + ' ' + esc(b.name) + '. Todos los derechos reservados.</span>' +
-      '<span class="footer__legal">Habeas data · Ley 1581 de 2012' +
+      '</div><div class="container footer__bottom"><span>© ' + new Date().getFullYear() + ' ' + esc(b.name) + (b.rif ? ' · RIF ' + esc(b.rif) : '') + '. Todos los derechos reservados.</span>' +
+      '<span class="footer__legal">Protección de datos personales · CRBV arts. 28 y 60' +
       '<button type="button" class="admin-login-btn" id="adminDot">' + icon('lock') + 'Iniciar sesión</button></span></div>';
   }
 
@@ -559,7 +589,7 @@
     e.preventDefault();
     var f = e.currentTarget;
     var msg = $('.js-rmsg', f), btn = $('button[type=submit]', f);
-    var tipo = f.tipo ? f.tipo.value : 'CC', ced = f.cedula.value.trim(), cod = f.codigo.value.trim();
+    var tipo = f.tipo ? f.tipo.value : 'V', ced = f.cedula.value.trim(), cod = f.codigo.value.trim();
     msg.textContent = ''; msg.classList.remove('err');
     if (!/^[A-Za-z0-9-]{4,20}$/.test(ced)) return fail('Ingrese un número de documento válido.');
     if (cod.length < 3) return fail('Ingrese el código de consulta de su comprobante.');
@@ -626,7 +656,7 @@
   function fmtFecha(iso) {
     if (!iso) return '—';
     var d = new Date(iso);
-    return isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+    return isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' });
   }
   function showBiosoft(d) {
     // El más reciente de todos (el consultado + su historial) va destacado arriba
@@ -663,7 +693,7 @@
       '<button type="button" class="btn btn--ghost" id="bsOpen">' + icon('arrow') + 'Abrir en pestaña nueva</button></div>' +
       (small ? '' : '<div class="bs__viewer" id="bsViewer"><div class="bs__loading">Cargando resultado…</div></div>') +
       hist +
-      '<p class="bs__note">' + icon('lock') + '<span>Resultado validado por bacteriólogo. Ante cualquier duda, consulte a su médico tratante.</span></p>' +
+      '<p class="bs__note">' + icon('lock') + '<span>Resultado validado por bioanalista. Ante cualquier duda, consulte a su médico tratante.</span></p>' +
       '</div>', true);
 
     $('#bsDown').onclick = function () { download(main, this); };
@@ -694,7 +724,7 @@
       ['Plaquetas', '265.000', '/mm³', '150.000 – 450.000'], ['Glucosa basal', '88', 'mg/dL', '70 – 100'], ['Colesterol total', '182', 'mg/dL', '< 200']];
     openModal('<div class="demo">' +
       '<div class="demo__head">' + brandLogo(38) + '<span class="pill">Modo demostración</span></div>' +
-      '<div class="demo__pt"><div><small>Paciente</small><strong>Paciente de ejemplo</strong></div><div><small>Documento</small><strong>' + esc(tipo) + ' ' + esc(ced) + '</strong></div><div><small>Orden</small><strong>' + esc(cod) + '</strong></div><div><small>Fecha</small><strong>' + new Date().toLocaleDateString('es-CO') + '</strong></div></div>' +
+      '<div class="demo__pt"><div><small>Paciente</small><strong>Paciente de ejemplo</strong></div><div><small>Documento</small><strong>' + esc(tipo) + ' ' + esc(ced) + '</strong></div><div><small>Orden</small><strong>' + esc(cod) + '</strong></div><div><small>Fecha</small><strong>' + new Date().toLocaleDateString('es-VE') + '</strong></div></div>' +
       '<div class="table-wrap"><table><thead><tr><th>Prueba</th><th>Resultado</th><th>Unidad</th><th>Referencia</th></tr></thead><tbody>' +
       rows.map(function (r) { return '<tr><td>' + r[0] + '</td><td><b>' + r[1] + '</b></td><td>' + r[2] + '</td><td>' + r[3] + '</td></tr>'; }).join('') +
       '</tbody></table></div>' +

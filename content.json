@@ -55,7 +55,7 @@
       "visible": true,
       "eyebrow": "Resultados confiables · Atención humana",
       "title": "Precisión diagnóstica con el calor humano que usted merece",
-      "subtitle": "Tecnología de última generación, bacteriólogos certificados y resultados en línea en tiempo récord. Su salud, en las mejores manos.",
+      "subtitle": "Tecnología de última generación, bioanalistas certificados y resultados en línea en tiempo récord. Su salud, en las mejores manos.",
       "cta1": "Consultar resultados",
       "cta2": "Agendar por WhatsApp",
       "image": "https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=1920&q=80",
@@ -196,13 +196,13 @@
           "text": "Equipos automatizados de última generación"
         },
         {
-          "text": "Bacteriólogos con formación continua"
+          "text": "Bioanalistas con formación continua"
         },
         {
           "text": "Control de calidad interno y externo"
         },
         {
-          "text": "Habilitados ante la Secretaría de Salud"
+          "text": "Registrados ante el Ministerio del Poder Popular para la Salud"
         }
       ]
     },
@@ -275,23 +275,27 @@
       "items": [
         {
           "name": "Chequeo Básico",
-          "price": "$ 89.000",
+          "price": "",
           "includes": "Cuadro hemático\nGlucosa\nParcial de orina\nCreatinina",
-          "featured": false
+          "featured": false,
+          "priceUsd": "25"
         },
         {
           "name": "Chequeo Integral",
-          "price": "$ 189.000",
+          "price": "",
           "includes": "Cuadro hemático\nPerfil lipídico completo\nGlucosa y HbA1c\nFunción renal y hepática\nTSH\nParcial de orina",
-          "featured": true
+          "featured": true,
+          "priceUsd": "55"
         },
         {
           "name": "Chequeo Ejecutivo",
-          "price": "$ 299.000",
+          "price": "",
           "includes": "Todo el chequeo integral\nPSA o perfil hormonal\nÁcido úrico\nVitamina D\nCoprológico",
-          "featured": false
+          "featured": false,
+          "priceUsd": "85"
         }
-      ]
+      ],
+      "rate": ""
     },
     "home": {
       "visible": true,
@@ -314,12 +318,12 @@
       "items": [
         {
           "name": "Dra. Nombre Apellido",
-          "role": "Bacterióloga · Directora científica",
+          "role": "Bioanalista · Directora científica",
           "photo": ""
         },
         {
           "name": "Nombre Apellido",
-          "role": "Bacteriólogo · Control de calidad",
+          "role": "Bioanalista · Control de calidad",
           "photo": ""
         },
         {
@@ -344,23 +348,23 @@
       "overlay": 60,
       "items": [
         {
-          "name": "EPS Aliada",
+          "name": "Seguros HCM",
           "logo": ""
         },
         {
-          "name": "Medicina Prepagada",
+          "name": "Pólizas de salud",
           "logo": ""
         },
         {
-          "name": "Pólizas de Salud",
+          "name": "Empresas aliadas",
           "logo": ""
         },
         {
-          "name": "Empresas",
+          "name": "Centros médicos",
           "logo": ""
         },
         {
-          "name": "IPS Aliada",
+          "name": "Convenios corporativos",
           "logo": ""
         }
       ]
@@ -440,8 +444,8 @@
           "a": "La mayoría de exámenes de rutina están listos el mismo día. Pruebas especiales pueden tardar de 2 a 8 días."
         },
         {
-          "q": "¿Atienden por EPS o prepagada?",
-          "a": "Sí, tenemos convenios con diferentes aseguradoras. Consúltenos para verificar su cobertura."
+          "q": "¿Trabajan con seguros o empresas?",
+          "a": "Sí, tenemos convenios con aseguradoras (HCM) y empresas. Consúltenos para verificar su cobertura."
         },
         {
           "q": "¿Qué medios de pago aceptan?",

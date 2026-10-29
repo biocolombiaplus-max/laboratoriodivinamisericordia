@@ -16,13 +16,15 @@ window.DEFAULT_CONTENT = {
     logoHeroCard: true,
     primary: '#0a2a52',
     accent: '#12b5a5',
-    phone: '+57 300 000 0000',
-    whatsapp: '573000000000',
+    phone: '+58 412 000 0000',
+    whatsapp: '584120000000',
     email: 'contacto@divinamisericordia.com',
-    address: 'Calle 00 # 00-00, Ciudad, Colombia',
+    address: 'Av. Principal, Local 00, Ciudad, Venezuela',
     facebook: '',
     instagram: '',
-    tiktok: ''
+    tiktok: '',
+    rif: '',
+    legend: 'Bioanálisis clínico con precisión, ética y calidez humana'
   },
 
   results: {
@@ -41,7 +43,7 @@ window.DEFAULT_CONTENT = {
       visible: true,
       eyebrow: 'Resultados confiables · Atención humana',
       title: 'Precisión diagnóstica con el calor humano que usted merece',
-      subtitle: 'Tecnología de última generación, bacteriólogos certificados y resultados en línea en tiempo récord. Su salud, en las mejores manos.',
+      subtitle: 'Tecnología de última generación, bioanalistas certificados y resultados en línea en tiempo récord. Su salud, en las mejores manos.',
       cta1: 'Consultar resultados',
       cta2: 'Agendar por WhatsApp',
       image: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=1920&q=80',
@@ -112,9 +114,9 @@ window.DEFAULT_CONTENT = {
       vision: 'Ser el laboratorio clínico de referencia en la región por su calidad, innovación y servicio al paciente.',
       items: [
         { text: 'Equipos automatizados de última generación' },
-        { text: 'Bacteriólogos con formación continua' },
+        { text: 'Bioanalistas con formación continua' },
         { text: 'Control de calidad interno y externo' },
-        { text: 'Habilitados ante la Secretaría de Salud' }
+        { text: 'Registrados ante el Ministerio del Poder Popular para la Salud' }
       ]
     },
 
@@ -155,13 +157,14 @@ window.DEFAULT_CONTENT = {
       eyebrow: 'Chequeos preventivos',
       title: 'Paquetes diseñados para su bienestar',
       subtitle: 'Prevenir es la mejor inversión. Elija el chequeo que mejor se adapte a usted.',
+      rate: '',
       image: '',
       imageMode: 'none',
       overlay: 60,
       items: [
-        { name: 'Chequeo Básico', price: '$ 89.000', includes: 'Cuadro hemático\nGlucosa\nParcial de orina\nCreatinina', featured: false },
-        { name: 'Chequeo Integral', price: '$ 189.000', includes: 'Cuadro hemático\nPerfil lipídico completo\nGlucosa y HbA1c\nFunción renal y hepática\nTSH\nParcial de orina', featured: true },
-        { name: 'Chequeo Ejecutivo', price: '$ 299.000', includes: 'Todo el chequeo integral\nPSA o perfil hormonal\nÁcido úrico\nVitamina D\nCoprológico', featured: false }
+        { name: 'Chequeo Básico', priceUsd: '25', price: '', includes: 'Cuadro hemático\nGlucosa\nParcial de orina\nCreatinina', featured: false },
+        { name: 'Chequeo Integral', priceUsd: '55', price: '', includes: 'Cuadro hemático\nPerfil lipídico completo\nGlucosa y HbA1c\nFunción renal y hepática\nTSH\nParcial de orina', featured: true },
+        { name: 'Chequeo Ejecutivo', priceUsd: '85', price: '', includes: 'Todo el chequeo integral\nPSA o perfil hormonal\nÁcido úrico\nVitamina D\nCoprológico', featured: false }
       ]
     },
 
@@ -185,8 +188,8 @@ window.DEFAULT_CONTENT = {
       imageMode: 'none',
       overlay: 60,
       items: [
-        { name: 'Dra. Nombre Apellido', role: 'Bacterióloga · Directora científica', photo: '' },
-        { name: 'Nombre Apellido', role: 'Bacteriólogo · Control de calidad', photo: '' },
+        { name: 'Dra. Nombre Apellido', role: 'Bioanalista · Directora científica', photo: '' },
+        { name: 'Nombre Apellido', role: 'Bioanalista · Control de calidad', photo: '' },
         { name: 'Nombre Apellido', role: 'Auxiliar de laboratorio', photo: '' },
         { name: 'Nombre Apellido', role: 'Atención al paciente', photo: '' }
       ]
@@ -201,11 +204,11 @@ window.DEFAULT_CONTENT = {
       imageMode: 'none',
       overlay: 60,
       items: [
-        { name: 'EPS Aliada', logo: '' },
-        { name: 'Medicina Prepagada', logo: '' },
-        { name: 'Pólizas de Salud', logo: '' },
-        { name: 'Empresas', logo: '' },
-        { name: 'IPS Aliada', logo: '' }
+        { name: 'Seguros HCM', logo: '' },
+        { name: 'Pólizas de salud', logo: '' },
+        { name: 'Empresas aliadas', logo: '' },
+        { name: 'Centros médicos', logo: '' },
+        { name: 'Convenios corporativos', logo: '' }
       ]
     },
 
@@ -252,8 +255,8 @@ window.DEFAULT_CONTENT = {
         { q: '¿Necesito cita previa?', a: 'No es obligatoria. Puede llegar en nuestro horario de atención o agendar por WhatsApp para mayor comodidad.' },
         { q: '¿Cómo consulto mis resultados?', a: 'En la sección "Resultados" ingrese su número de documento y el código que aparece en su comprobante.' },
         { q: '¿Cuánto tardan los resultados?', a: 'La mayoría de exámenes de rutina están listos el mismo día. Pruebas especiales pueden tardar de 2 a 8 días.' },
-        { q: '¿Atienden por EPS o prepagada?', a: 'Sí, tenemos convenios con diferentes aseguradoras. Consúltenos para verificar su cobertura.' },
-        { q: '¿Qué medios de pago aceptan?', a: 'Efectivo, tarjetas débito y crédito, transferencias y pagos por código QR.' }
+        { q: '¿Trabajan con seguros o empresas?', a: 'Sí, tenemos convenios con aseguradoras (HCM) y empresas. Consúltenos para verificar su cobertura.' },
+        { q: '¿Qué medios de pago aceptan?', a: 'Bolívares y dólares en efectivo, pago móvil, transferencias y tarjetas de débito y crédito.' }
       ]
     },
 

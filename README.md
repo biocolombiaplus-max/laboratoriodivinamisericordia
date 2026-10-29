@@ -15,7 +15,7 @@ Todas las secciones se pueden editar, ocultar y reordenar desde el panel.
 
 Formas de abrirlo:
 
-1. Botón **«Iniciar sesión»** al final del pie de página, junto a «Ley 1581 de 2012».
+1. Botón **«Iniciar sesión»** al final del pie de página, junto a «Protección de datos personales».
 2. Pulsar **Ctrl + Shift + A**.
 3. Abrir la dirección del sitio terminada en **`#admin`** (por ejemplo, `midominio.com/#admin`).
 
@@ -43,7 +43,7 @@ Cómo funciona:
 1. En BIOsoft, el laboratorio envía el resultado desde **Reportes → Enviar resultados**.
    BIOsoft lo publica en `resultadosPublicos/{código}`.
 2. El paciente entra a la web, escribe su **número de documento** y el **código de consulta de 6 dígitos** de su comprobante,
-   y acepta el tratamiento de datos (Ley 1581).
+   y autoriza el uso de sus datos (CRBV, arts. 28 y 60).
 3. La web lee **solo ese código** (nunca un listado) y verifica que el documento coincida.
    Si el código o el documento no corresponden, muestra el mismo mensaje en ambos casos, para no revelar cuál falló.
 4. El paciente ve su nombre, el número de orden y la fecha. En computador el PDF se muestra en pantalla.

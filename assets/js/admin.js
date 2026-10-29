@@ -64,10 +64,15 @@
     process: { name: 'Cómo funciona', fields: COMMON.concat(IMAGE), items: { label: 'Pasos', fields: [
       { k: 'title', label: 'Título', type: 'text' }, { k: 'text', label: 'Texto', type: 'textarea' }
     ], blank: { title: 'Nuevo paso', text: '' } } },
-    packages: { name: 'Chequeos / Paquetes', fields: COMMON.concat(IMAGE), items: { label: 'Paquetes', fields: [
-      { k: 'name', label: 'Nombre', type: 'text' }, { k: 'price', label: 'Precio', type: 'text' },
+    packages: { name: 'Chequeos / Paquetes', fields: COMMON.concat([
+      { k: 'rate', label: 'Tasa de cambio del día (Bs. por $1)', type: 'text',
+        help: 'Ej: 36,50. Con la tasa, el precio en bolívares de cada paquete se calcula solo a partir del precio en dólares. Actualícela cuando cambie.' }
+    ]).concat(IMAGE), items: { label: 'Paquetes', fields: [
+      { k: 'name', label: 'Nombre', type: 'text' },
+      { k: 'priceUsd', label: 'Precio en dólares ($)', type: 'text', help: 'Ej: 25 o 25,50' },
+      { k: 'price', label: 'Precio en bolívares (opcional)', type: 'text', help: 'Déjelo vacío para calcularlo con la tasa del día. Si lo escribe, se usa este valor.' },
       { k: 'includes', label: 'Incluye (uno por línea)', type: 'textarea' }, { k: 'featured', label: 'Destacar como «Más elegido»', type: 'toggle' }
-    ], blank: { name: 'Nuevo chequeo', price: '$ 0', includes: 'Examen 1\nExamen 2', featured: false } } },
+    ], blank: { name: 'Nuevo chequeo', priceUsd: '0', price: '', includes: 'Examen 1\nExamen 2', featured: false } } },
     home: { name: 'Toma a domicilio', fields: [
       { k: 'eyebrow', label: 'Etiqueta superior', type: 'text' }, { k: 'title', label: 'Título', type: 'text' },
       { k: 'text', label: 'Texto', type: 'textarea' }, { k: 'cta', label: 'Texto del botón', type: 'text' }
@@ -111,6 +116,8 @@
     { k: 'logoHeroPos', label: 'Posición', type: 'select', options: [['top', 'Arriba del título'], ['bottom', 'Debajo de los botones'], ['side', 'Grande a la derecha']] },
     { k: 'logoHeroAlign', label: 'Alineación', type: 'select', options: [['left', 'Izquierda'], ['center', 'Centro'], ['right', 'Derecha']] },
     { k: 'logoHeroCard', label: 'Fondo blanco detrás del logo (mejor contraste)', type: 'toggle' },
+    { k: 'rif', label: 'RIF (se muestra debajo del logo y en el pie)', type: 'text', help: 'Ej: J-12345678-9. Déjelo vacío para no mostrarlo.' },
+    { k: 'legend', label: 'Leyenda debajo del logo', type: 'text', help: 'Frase corta y profesional. Déjela vacía para no mostrarla.' },
     { group: 'Colores de marca' },
     { k: 'primary', label: 'Color principal', type: 'color' },
     { k: 'accent', label: 'Color de acento', type: 'color' },
@@ -353,8 +360,8 @@
       if (d.telefonos) {
         b.phone = String(d.telefonos).split(/[\/,;·]/)[0].trim();
         var n = String(d.telefonos).replace(/\D/g, '');
-        if (n.length > 13) n = n.slice(0, 10);
-        if (n.length === 10 && n.charAt(0) === '3') n = '57' + n;
+        if (n.length > 13) n = n.slice(0, 11);
+        if (/^0\d{10}$/.test(n)) n = '58' + n.slice(1); // 0412… → 58412…
         if (n) b.whatsapp = n;
       }
       if (d.email) b.email = d.email;
@@ -388,7 +395,7 @@
     }).catch(function (e) {
       setStatus('');
       if (!e || e.message === 'cancel') return;
-      var msg = e.status === 429 ? 'BIOsoft (Firebase) agotó su cuota diaria de lecturas (error 429). Se restablece a las 2:00 a. m. (hora Colombia) o al activar el plan Blaze en Firebase.'
+      var msg = e.status === 429 ? 'BIOsoft (Firebase) agotó su cuota diaria de lecturas (error 429). Se restablece cada día entre las 3:00 y las 4:00 a. m. (hora de Venezuela) o al activar el plan Blaze en Firebase.'
         : e.status === 403 ? 'Firebase rechazó la consulta desde este dominio (error 403). Agregue el dominio a la clave web en Google Cloud → Credenciales.'
         : e.status ? 'BIOsoft respondió con error ' + e.status + '.'
         : e.message && e.message.indexOf('http_') !== 0 ? e.message : 'No se pudo conectar con BIOsoft (revise su internet).';
