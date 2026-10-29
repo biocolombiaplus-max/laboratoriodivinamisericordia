@@ -17,6 +17,7 @@
   var SESSION_KEY = 'dm_admin';
   var server = false;      // true si se puede publicar en el servidor (PHP o Vercel Blob)
   var platform = '';       // 'vercel' | 'php' | ''
+  var storage = '';        // en Vercel: 'github' | 'blob' | ''
   var pass = '';           // clave usada en esta sesión, se envía al servidor al publicar
   var current = 'hero';    // sección abierta en el editor
   var tab = 'sections';
@@ -174,7 +175,9 @@
   }
   function upload(file, isLogo) {
     return compress(file, isLogo).then(function (dataUrl) {
-      if (!server) return dataUrl;
+      // En modo GitHub la imagen se sube al publicar (un solo commit); mientras
+      // tanto se conserva dentro del contenido para verla de inmediato.
+      if (!server || storage === 'github') return dataUrl;
       return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'upload', pass: pass, name: file.name, data: dataUrl }) })
         .then(function (r) { return r.json(); })
         .then(function (d) { return d.ok ? d.url : dataUrl; })
@@ -428,15 +431,15 @@
 
   function renderPublish(body) {
     var vercelSetup = platform === 'vercel' && !server
-      ? '<div class="adm-card adm-card--warn"><h4>⚙️ Active «Publicar» en Vercel (una sola vez)</h4><ol class="adm-steps">' +
-        '<li>Entre a <b>vercel.com</b> → su proyecto → pestaña <b>Storage</b>.</li>' +
-        '<li>Pulse <b>Create Database</b> → elija <b>Blob</b> → acceso <b>Public</b> → <b>Create</b>.</li>' +
-        '<li>Cuando pregunte, conéctelo a este proyecto (todos los entornos) → <b>Connect</b>.</li>' +
-        '<li>Vaya a <b>Deployments</b> → menú «⋯» del último → <b>Redeploy</b>.</li>' +
-        '<li>Recargue esta página e inicie sesión de nuevo: aquí aparecerá 🟢.</li></ol></div>'
+      ? '<div class="adm-card adm-card--warn"><h4>⚙️ Active «Publicar» en Vercel (una sola vez, gratis)</h4><ol class="adm-steps">' +
+        '<li>En <b>github.com</b> → foto de perfil → <b>Settings</b> → <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>' +
+        '<li>Nombre: <i>panel-divina</i>. Expiración: la más larga. <b>Repository access</b>: <i>Only select repositories</i> → <b>laboratoriodivinamisericordia</b>.</li>' +
+        '<li><b>Permissions</b> → <b>Contents</b>: <b>Read and write</b>. Pulse <b>Generate token</b> y copie el código (empieza por <code>github_pat_</code>).</li>' +
+        '<li>En <b>vercel.com</b> → su proyecto → <b>Settings</b> → <b>Environment Variables</b> → nombre <b>GITHUB_TOKEN</b>, valor: el código → <b>Save</b>.</li>' +
+        '<li><b>Deployments</b> → menú «⋯» del último → <b>Redeploy</b>. Luego recargue esta página: aquí aparecerá 🟢.</li></ol></div>'
       : '';
     body.innerHTML = vercelSetup +
-      '<div class="adm-card"><h4>' + (server ? '🟢 Publicación conectada' + (platform === 'vercel' ? ' (Vercel)' : '') : '🟡 Modo navegador') + '</h4><p>' +
+      '<div class="adm-card"><h4>' + (server ? '🟢 Publicación conectada' + (platform === 'vercel' ? (storage === 'github' ? ' (Vercel + GitHub)' : ' (Vercel)') : '') : '🟡 Modo navegador') + '</h4><p>' +
       (server ? 'Al pulsar «Publicar cambios», todos los visitantes verán la página actualizada' + (platform === 'vercel' ? ' en 1 a 2 minutos.' : ' de inmediato.')
         : 'Los cambios se guardan solo en este navegador. Para que los vean los visitantes, descargue el archivo <b>content.json</b> y súbalo a la carpeta del sitio.') +
       '</p>' + (server ? '<button type="button" class="adm-btn adm-btn--pri adm-btn--block" id="admPublish">Publicar cambios</button>' : '') +
@@ -487,8 +490,8 @@
   /* Las imágenes guardadas dentro del contenido (subidas sin servidor o
      importadas de BIOsoft) se suben primero como archivos, para que el
      contenido publicado quede liviano. */
-  function externalizeImages(c, btn) {
-    var refs = [];
+  function externalizeImages(c, btn, files) {
+    var refs = [], done = {};
     (function walk(o) {
       Object.keys(o).forEach(function (k) {
         var v = o[k];
@@ -498,28 +501,37 @@
     })(c);
     return refs.reduce(function (p, ref, i) {
       return p.then(function () {
+        var data = ref.o[ref.k];
+        if (done[data]) { ref.o[ref.k] = done[data]; return; } // misma imagen repetida
         btn.textContent = 'Subiendo imágenes ' + (i + 1) + '/' + refs.length + '…';
-        return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'upload', pass: pass, name: 'imagen', data: ref.o[ref.k] }) })
+        return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'upload', pass: pass, name: 'imagen', data: data }) })
           .then(function (r) { return r.json(); })
-          .then(function (d) { if (d.ok && d.url) ref.o[ref.k] = d.url; else throw new Error(d.message || 'No se pudo subir una imagen'); });
+          .then(function (d) {
+            if (!(d.ok && d.url)) throw new Error(d.message || 'No se pudo subir una imagen');
+            ref.o[ref.k] = done[data] = d.url;
+            if (d.file && files) files.push(d.file);
+          });
       });
     }, Promise.resolve());
   }
 
   function publish() {
     var btn = $('#admPublish'); btn.disabled = true; btn.textContent = 'Publicando…';
-    var c = C();
-    externalizeImages(c, btn)
+    var c = C(), files = [];
+    c.meta.updated = Date.now();
+    // En GitHub se publica una copia: las imágenes del navegador siguen
+    // mostrándose aquí mientras Vercel despliega la versión nueva.
+    var out = storage === 'github' ? JSON.parse(JSON.stringify(c)) : c;
+    externalizeImages(out, btn, files)
       .then(function () {
         btn.textContent = 'Publicando…';
-        c.meta.updated = Date.now();
-        return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save', pass: pass, content: c }) });
+        return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save', pass: pass, content: out, files: files }) });
       })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.ok) throw new Error(d.message || 'Error al publicar');
         window.Site.saveLocal(); window.Site.render();
-        window.Site.toast(platform === 'vercel' ? '¡Publicado! Los visitantes lo verán en 1 a 2 minutos.' : '¡Cambios publicados!', 'ok'); setStatus('Publicado ' + new Date().toLocaleTimeString('es-CO'));
+        window.Site.toast(platform === 'vercel' ? '¡Publicado! Vercel está actualizando la página: todos la verán en 1 a 2 minutos.' : '¡Cambios publicados!', 'ok'); setStatus('Publicado ' + new Date().toLocaleTimeString('es-CO'));
       })
       .catch(function (e) { window.Site.toast(e.message, 'err'); })
       .then(function () { btn.disabled = false; btn.textContent = 'Publicar cambios'; });
@@ -591,7 +603,7 @@
   }
   function checkServer() {
     return ping('api/admin').then(function (d) {
-      if (d && d.platform === 'vercel') { API = 'api/admin'; platform = 'vercel'; server = !!d.ok; return; }
+      if (d && d.platform === 'vercel') { API = 'api/admin'; platform = 'vercel'; server = !!d.ok; storage = d.storage || (d.blob ? 'blob' : ''); return; }
       return ping('api/save.php').then(function (d2) {
         API = 'api/save.php'; server = !!(d2 && d2.ok); platform = server ? 'php' : '';
       });

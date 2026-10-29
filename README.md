@@ -73,24 +73,30 @@ Después de 6 consultas fallidas, el formulario se bloquea unos minutos en ese n
 
 ### Opción A: Vercel (la que se usa actualmente)
 
-El sitio trae funciones para Vercel (`api/admin.js` y `api/content.js`) que guardan lo publicado en
-**Vercel Blob** (plan gratuito). Hay que activarlas una sola vez:
+**Publicar** guarda los cambios directamente en este repositorio de GitHub, en un solo commit con
+`content.json` y las imágenes nuevas en `uploads/`. Vercel vuelve a desplegar solo, en 1 a 2 minutos.
+Es gratis y no depende de los límites de Vercel Blob. Se activa una sola vez:
 
-1. En vercel.com, abra el proyecto y vaya a la pestaña **Storage**.
-2. Pulse **Create Database**, elija **Blob**, seleccione acceso **Public** y pulse **Create**.
-3. Conéctelo al proyecto, en todos los entornos.
-4. En **Deployments**, abra el menú «⋯» del último despliegue y pulse **Redeploy**.
-5. Abra la página, pulse **Iniciar sesión** y vaya a la pestaña **Publicar**: debe aparecer 🟢 «Publicación conectada (Vercel)».
+1. **Crear la clave de GitHub.** En github.com, entre a la foto de perfil → **Settings** → **Developer settings**
+   → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**, y llene:
+   - Nombre: `panel-divina`. Expiración: la más larga disponible.
+   - **Repository access**: *Only select repositories* → `laboratoriodivinamisericordia`.
+   - **Permissions** → **Repository permissions** → **Contents**: *Read and write*.
+   - Pulse **Generate token** y copie el código (empieza por `github_pat_`).
+2. **Pegarla en Vercel.** Vaya al proyecto → **Settings** → **Environment Variables** → **Add**.
+   Nombre `GITHUB_TOKEN`, valor el código copiado, todos los entornos → **Save**.
+3. **Redeploy.** En **Deployments**, abra el menú «⋯» del último despliegue → **Redeploy**.
+4. **Comprobar.** En la página, pulse **Iniciar sesión** → pestaña **Publicar**.
+   Debe aparecer 🟢 «Publicación conectada (Vercel + GitHub)».
 
-Desde ese momento:
+Funcionamiento:
 
-- **Publicar cambios** actualiza la página para todos los visitantes, en 1 a 2 minutos por la caché.
-- Las fotos se guardan en Blob. Las imágenes importadas de BIOsoft se suben solas al publicar.
-- Cada publicación deja un respaldo en `site/backups/` dentro de Blob.
-- **Clave**: se cambia en **Settings → Environment Variables**. Agregue `ADMIN_PASSWORD` con la clave nueva y haga **Redeploy**.
+- El repositorio y la rama se toman automáticamente del despliegue de Vercel.
+  Si se quieren fijar, use `GITHUB_REPO` (`dueño/repositorio`) y `GITHUB_BRANCH`.
+- Cada publicación queda en el historial de GitHub, que sirve de respaldo y permite volver a una versión anterior.
+- **Clave del panel**: se cambia con la variable `ADMIN_PASSWORD` en Vercel y luego **Redeploy**.
   Si no existe esa variable, la clave es `123456`.
-
-Si Blob no está conectado, la pestaña **Publicar** del panel muestra estos mismos pasos.
+- Si en lugar de `GITHUB_TOKEN` se conecta un almacenamiento **Vercel Blob** público, el panel lo usa automáticamente.
 
 ### Opción B: hosting con PHP (cPanel, Hostinger, etc.)
 
@@ -118,7 +124,7 @@ assets/js/content.default.js  contenido de ejemplo (textos iniciales)
 assets/js/app.js           renderizado, resultados, mapa, interacciones
 assets/js/admin.js         panel administrativo
 assets/js/icons.js         iconos SVG
-api/admin.js, api/content.js  publicación en Vercel (Vercel Blob)
+api/admin.js, api/content.js  publicación en Vercel (GitHub o Vercel Blob)
 api/save.php               publicación en hosting con PHP
 package.json               dependencia @vercel/blob para las funciones de Vercel
 content.json               (se crea al publicar) contenido real del cliente
@@ -127,7 +133,7 @@ content.json               (se crea al publicar) contenido real del cliente
 ## Recomendaciones antes de entregar
 
 - Cambie la clave `123456` (en Vercel: variable `ADMIN_PASSWORD`).
-- En Vercel, conecte el almacenamiento Blob (ver «Opción A»).
+- En Vercel, agregue `GITHUB_TOKEN` para activar «Publicar» (ver «Opción A»).
 - Reemplace las fotos de ejemplo por fotos reales del laboratorio y del equipo.
 - Configure el WhatsApp, la dirección y el enlace de Google Maps (Compartir → Insertar un mapa → copiar HTML).
 - En Panel → Resultados, escriba el ID del laboratorio en BIOsoft y pulse «Importar marca y contenido desde BIOsoft».
