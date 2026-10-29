@@ -171,16 +171,17 @@
       '</section>';
   };
 
+  /* Formulario real de consulta en la portada (mismo flujo que el portal) */
   function resultsMini() {
-    return '<div class="glass-card reveal">' +
-      '<div class="glass-card__head">' + icon('lock') + '<div><strong>Resultados en línea</strong><small>Acceso seguro para pacientes</small></div></div>' +
-      '<div class="glass-card__rows">' +
-      '<div class="gc-row"><span>' + icon('id') + 'Documento</span><b>•••• •••• 45</b></div>' +
-      '<div class="gc-row"><span>' + icon('key') + 'Código</span><b>••••••</b></div>' +
-      '<div class="gc-status"><i></i>Resultados listos para descargar</div>' +
-      '</div>' +
-      '<a href="#results" class="btn btn--accent btn--block">' + icon('arrow') + 'Ir al portal</a>' +
-      '</div>';
+    return '<form class="hero-res js-results" novalidate autocomplete="off">' +
+      '<div class="hero-res__head"><span class="hero-res__ico">' + icon('lock') + '</span><div><strong>Consulte sus resultados</strong><small>Acceso seguro y confidencial</small></div></div>' +
+      '<div class="field"><label for="hDoc">Número de documento</label><div class="input-ico">' + icon('id') + '<input id="hDoc" name="cedula" inputmode="numeric" placeholder="Ej: 1020304050" required maxlength="20"></div></div>' +
+      '<div class="field"><label for="hCode">Código de consulta</label><div class="input-ico">' + icon('key') + '<input id="hCode" name="codigo" placeholder="Código de 6 dígitos" required maxlength="40" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase"></div>' +
+      '<small class="hint">Lo encuentra en el comprobante que le entregamos.</small></div>' +
+      '<label class="check"><input type="checkbox" name="ok" required><span>Autorizo el tratamiento de mis datos (Ley 1581 de 2012).</span></label>' +
+      '<button class="btn btn--accent btn--block btn--lg" type="submit">' + icon('file') + '<span>Ver mis resultados</span></button>' +
+      '<p class="results-card__msg js-rmsg" role="alert"></p>' +
+      '</form>';
   }
 
   R.stats = function (s) {
@@ -197,7 +198,7 @@
     }).join('');
     var left = '<div class="results__info">' + head(s, false) + (feats ? '<ul class="feature-list reveal">' + feats + '</ul>' : '') +
       (s.imageMode === 'frame' ? frame(s.image, s.title, 'frame--sm') : '') + '</div>';
-    var form = '<form class="results-card reveal" id="resultsForm" novalidate autocomplete="off">' +
+    var form = '<form class="results-card reveal js-results" id="resultsForm" novalidate autocomplete="off">' +
       '<div class="results-card__head"><span class="results-card__ico">' + icon('lock') + '</span><div><h3>Acceso a resultados</h3><p>Sus datos están protegidos</p></div></div>' +
       '<div class="field"><label for="rTipo">Tipo de documento</label><div class="select-wrap"><select id="rTipo" name="tipo">' +
       '<option value="CC">Cédula de ciudadanía</option><option value="TI">Tarjeta de identidad</option><option value="RC">Registro civil</option><option value="CE">Cédula de extranjería</option><option value="PA">Pasaporte</option><option value="PPT">Permiso de protección temporal</option>' +
@@ -205,9 +206,9 @@
       '<div class="field"><label for="rDoc">Número de documento</label><div class="input-ico">' + icon('id') + '<input id="rDoc" name="cedula" inputmode="numeric" placeholder="Ej: 1020304050" required maxlength="20"></div></div>' +
       '<div class="field"><label for="rCode">Código de consulta</label><div class="input-ico">' + icon('key') + '<input id="rCode" name="codigo" placeholder="Código de su comprobante" required maxlength="40" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase"></div>' +
       (r.help ? '<small class="hint">' + esc(r.help) + '</small>' : '') + '</div>' +
-      '<label class="check"><input type="checkbox" id="rOk" required><span>Autorizo el tratamiento de mis datos personales según la Ley 1581 de 2012.</span></label>' +
+      '<label class="check"><input type="checkbox" id="rOk" name="ok" required><span>Autorizo el tratamiento de mis datos personales según la Ley 1581 de 2012.</span></label>' +
       '<button class="btn btn--accent btn--block btn--lg" type="submit" id="rBtn">' + icon('file') + '<span>Consultar resultados</span></button>' +
-      '<p class="results-card__msg" id="rMsg" role="alert"></p>' +
+      '<p class="results-card__msg js-rmsg" id="rMsg" role="alert"></p>' +
       '</form>';
     return shell('results', s, '<div class="split split--results">' + left + form + '</div>', { cls: 'sec--tint' });
   };
@@ -460,7 +461,7 @@
     };
     $$('a', nav).forEach(function (a) { a.addEventListener('click', function () { D.body.classList.remove('nav-open'); }); });
 
-    var rf = $('#resultsForm'); if (rf) rf.onsubmit = onResults;
+    $$('.js-results').forEach(function (f) { f.onsubmit = onResults; });
     var cf = $('#contactForm'); if (cf) cf.onsubmit = function (e) {
       e.preventDefault();
       var msg = 'Hola, soy ' + $('#cName').value + (($('#cPhone').value) ? ' (' + $('#cPhone').value + ')' : '') +
@@ -505,12 +506,13 @@
 
   function onResults(e) {
     e.preventDefault();
-    var msg = $('#rMsg'), btn = $('#rBtn');
-    var tipo = $('#rTipo').value, ced = $('#rDoc').value.trim(), cod = $('#rCode').value.trim();
-    msg.textContent = ''; msg.className = 'results-card__msg';
+    var f = e.currentTarget;
+    var msg = $('.js-rmsg', f), btn = $('button[type=submit]', f);
+    var tipo = f.tipo ? f.tipo.value : 'CC', ced = f.cedula.value.trim(), cod = f.codigo.value.trim();
+    msg.textContent = ''; msg.classList.remove('err');
     if (!/^[A-Za-z0-9-]{4,20}$/.test(ced)) return fail('Ingrese un número de documento válido.');
     if (cod.length < 3) return fail('Ingrese el código de consulta de su comprobante.');
-    if (!$('#rOk').checked) return fail('Debe autorizar el tratamiento de datos para continuar.');
+    if (!f.ok.checked) return fail('Debe autorizar el tratamiento de datos para continuar.');
     if (attempts().length >= 6) return fail('Demasiados intentos. Espere unos minutos e intente de nuevo.');
 
     var r = C.results;
@@ -562,7 +564,7 @@
       showDemo(tipo, ced, cod);
     }, 900);
 
-    function fail(t) { msg.textContent = t; msg.className = 'results-card__msg err'; }
+    function fail(t) { msg.textContent = t; msg.classList.add('err'); }
   }
 
   /* ---------- resultado real de BIOsoft ---------- */
