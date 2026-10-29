@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updated": 1793295978087,
+    "updated": 1793296523833,
     "version": 1
   },
   "brand": {
@@ -455,21 +455,21 @@
       "title": "Visítenos",
       "subtitle": "Estamos ubicados en una zona de fácil acceso, con parqueadero cercano.",
       "mapUrl": "",
-      "image": "",
-      "imageMode": "none",
+      "image": "uploads/756223215d52dedb500a.webp",
+      "imageMode": "frame",
       "overlay": 60,
       "items": [
         {
           "day": "Lunes a viernes",
-          "hours": "6:00 a.m. – 6:00 p.m."
+          "hours": "7:00 a.m. – 9:00 p.m."
         },
         {
           "day": "Sábados",
-          "hours": "6:30 a.m. – 1:00 p.m."
+          "hours": "7:00 a.m. – 2:00 p.m."
         },
         {
-          "day": "Domingos y festivos",
-          "hours": "Toma a domicilio con cita"
+          "day": "Domingos",
+          "hours": "7:00 a.m. - 1:00 p.m."
         }
       ]
     },
