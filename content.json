@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updated": 1793296760681,
+    "updated": 1793302280326,
     "version": 1
   },
   "brand": {
@@ -22,7 +22,9 @@
     "address": "Calle 15 entre av 10 y 11 # 10 - 65 sector el centro rubio estado tachira",
     "facebook": "",
     "instagram": "https://www.instagram.com/p/CUNjRJclmeM/?xtok=MWZ3Zmd4b3d3cGt5Zg==",
-    "tiktok": ""
+    "tiktok": "",
+    "rif": "",
+    "legend": "Bioanálisis clínico con precisión, ética y calidez humana"
   },
   "results": {
     "mode": "biosoft",
@@ -188,6 +190,16 @@
       "text": "Somos un laboratorio clínico comprometido con la exactitud de cada resultado. Combinamos equipos automatizados de última generación, procesos estandarizados y un equipo humano que entiende que detrás de cada muestra hay una persona y una familia.",
       "image": "uploads/1ff06ecd14e718411fd1.webp",
       "imageMode": "frame",
+      "gallery": [
+        {
+          "image": "uploads/dfc4df3998a071afc0bd.webp",
+          "caption": "Analizador de Pruebas Especiales"
+        },
+        {
+          "image": "uploads/217339413f8eed8ea130.webp",
+          "caption": "Analizador de Hematología"
+        }
+      ],
       "overlay": 60,
       "mission": "Brindar resultados confiables y oportunos que apoyen decisiones médicas acertadas, con un trato cálido y humano.",
       "vision": "Ser el laboratorio clínico de referencia en la región por su calidad, innovación y servicio al paciente.",
@@ -269,6 +281,7 @@
       "eyebrow": "Chequeos preventivos",
       "title": "Paquetes diseñados para su bienestar",
       "subtitle": "Prevenir es la mejor inversión. Elija el chequeo que mejor se adapte a usted.",
+      "rate": "",
       "image": "",
       "imageMode": "none",
       "overlay": 60,
@@ -294,8 +307,7 @@
           "featured": false,
           "priceUsd": "85"
         }
-      ],
-      "rate": ""
+      ]
     },
     "home": {
       "visible": true,
@@ -305,6 +317,7 @@
       "cta": "Agendar toma a domicilio",
       "image": "uploads/a699abdc539cd467e7bf.webp",
       "imageMode": "frame",
+      "gallery": [],
       "overlay": 60
     },
     "team": {
