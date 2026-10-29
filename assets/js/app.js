@@ -394,7 +394,8 @@
       '<div><h4>Contacto</h4><div class="footer__links"><span>' + esc(b.address) + '</span><a href="tel:' + esc(String(b.phone).replace(/[^\d+]/g, '')) + '">' + esc(b.phone) + '</a><a href="mailto:' + esc(b.email) + '">' + esc(b.email) + '</a></div></div>' +
       '<div class="footer__cta"><h4>¿Listo para su examen?</h4><a class="btn btn--accent" target="_blank" rel="noopener" href="' + esc(wa('Hola, quiero agendar un examen.')) + '">Agendar ahora</a></div>' +
       '</div><div class="container footer__bottom"><span>© ' + new Date().getFullYear() + ' ' + esc(b.name) + '. Todos los derechos reservados.</span>' +
-      '<span>Habeas data · Ley 1581 de 2012 <button class="admin-dot" id="adminDot" aria-label="Acceso administrativo" title=" ">•</button></span></div>';
+      '<span class="footer__legal">Habeas data · Ley 1581 de 2012' +
+      '<button type="button" class="admin-login-btn" id="adminDot">' + icon('lock') + 'Iniciar sesión</button></span></div>';
   }
 
   /* ---------- render principal ---------- */

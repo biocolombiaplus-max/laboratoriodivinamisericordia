@@ -11,11 +11,11 @@ Preparación de exámenes · Preguntas frecuentes · **Cómo llegar (Google Maps
 
 Todas las secciones se pueden editar, ocultar y reordenar desde el panel.
 
-## Panel administrativo (acceso oculto)
+## Panel administrativo
 
-Hay tres formas de abrirlo:
+Formas de abrirlo:
 
-1. Hacer clic en el punto discreto **•** al final del pie de página, junto a «Ley 1581 de 2012».
+1. Botón **«Iniciar sesión»** al final del pie de página, junto a «Ley 1581 de 2012».
 2. Pulsar **Ctrl + Shift + A**.
 3. Abrir la dirección del sitio terminada en **`#admin`** (por ejemplo, `midominio.com/#admin`).
 
