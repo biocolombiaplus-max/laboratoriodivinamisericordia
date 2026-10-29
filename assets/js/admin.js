@@ -124,7 +124,9 @@
   ];
 
   var RESULTS = [
-    { k: 'mode', label: 'Modo de conexión', type: 'select', options: [['demo', 'Demostración (resultado de ejemplo)'], ['url', 'Enlace del software de resultados'], ['api', 'API JSON del software']] },
+    { k: 'mode', label: 'Modo de conexión', type: 'select', options: [['biosoft', 'BIOsoft (conexión directa, recomendado)'], ['demo', 'Demostración (resultado de ejemplo)'], ['url', 'Enlace de otro software'], ['api', 'API JSON de otro software']] },
+    { k: 'tenantId', label: 'ID del laboratorio en BIOsoft (opcional)', type: 'text', show: function (r) { return r.mode === 'biosoft'; },
+      help: 'Es el valor «t=» del enlace de la Página Web en BIOsoft (Configuración → Página Web). Si lo llena, solo se muestran resultados de este laboratorio y puede importar la marca con el botón de abajo.' },
     { k: 'urlTemplate', label: 'Enlace del software', type: 'textarea', show: function (r) { return r.mode === 'url'; },
       help: 'Use {cedula}, {codigo} y {tipo} donde van los datos del paciente. Ej: https://software.com/resultados?doc={cedula}&clave={codigo}' },
     { k: 'openIn', label: 'Abrir resultados en', type: 'select', options: [['modal', 'Ventana dentro de la página'], ['tab', 'Pestaña nueva']], show: function (r) { return r.mode === 'url'; } },
@@ -308,17 +310,88 @@
 
   function renderBrand(body) {
     var b = C().brand;
-    body.innerHTML = BRAND.map(function (f) { return field(f, b); }).join('');
+    body.innerHTML = '<button type="button" class="adm-btn adm-btn--ghost adm-btn--block" id="admImportBs2" style="margin:0 0 16px">Importar logo y datos desde BIOsoft</button>' +
+      BRAND.map(function (f) { return field(f, b); }).join('');
     bindFields(body, BRAND, b, draw);
+    $('#admImportBs2').onclick = importBiosoft;
+  }
+
+  /* Trae logo, colores, contacto, textos, servicios, testimonios, cifras,
+     horario y mapa de la Página Web configurada en BIOsoft
+     (colección pública demoSitioWeb). Solo copia los campos que tengan dato. */
+  function importBiosoft() {
+    var c = C(), r = c.results;
+    var host = location.hostname;
+    var local = /^(localhost|127\.|0\.0\.0\.0|$)/.test(host) || /github\.io|netlify|vercel/.test(host);
+    var getId = (r.tenantId || '').trim()
+      ? Promise.resolve(r.tenantId.trim())
+      : (local ? Promise.resolve(null) : window.BIOSOFT.findTenantByDomain(host));
+    setStatus('Consultando BIOsoft…');
+    getId.then(function (id) {
+      if (!id) {
+        id = (prompt('ID del laboratorio en BIOsoft (el valor «t=» del enlace de la Página Web):') || '').trim();
+        if (!id) throw new Error('cancel');
+      }
+      return window.BIOSOFT.getSite(id).then(function (d) { return { id: id, d: d }; });
+    }).then(function (res) {
+      var d = res.d;
+      if (!d) throw new Error('No se encontró la Página Web de ese laboratorio en BIOsoft.');
+      if (!confirm('Se encontró «' + (d.nombre || 'Laboratorio') + '» en BIOsoft. ¿Importar su logo, datos y contenido? Lo que no tenga dato en BIOsoft se conserva.')) throw new Error('cancel');
+      var b = c.brand, S = c.sections;
+      r.tenantId = res.id;
+      if (d.nombre) { b.name = d.nombre; b.short = d.nombre.replace(/^laboratorio\s+(cl[ií]nico\s+)?/i, ''); }
+      if (d.logoDataUrl) b.logo = d.logoDataUrl;
+      if (/^#[0-9a-f]{6}$/i.test(d.colorPrimario || '')) b.accent = d.colorPrimario;
+      if (d.telefonos) {
+        b.phone = String(d.telefonos).split(/[\/,;·]/)[0].trim();
+        var n = String(d.telefonos).replace(/\D/g, '');
+        if (n.length > 13) n = n.slice(0, 10);
+        if (n.length === 10 && n.charAt(0) === '3') n = '57' + n;
+        if (n) b.whatsapp = n;
+      }
+      if (d.email) b.email = d.email;
+      if (d.direccion) b.address = d.direccion;
+      ['facebook', 'instagram', 'tiktok'].forEach(function (k) { if (d[k]) b[k] = d[k]; });
+      if (d.heroTitulo) S.hero.title = d.heroTitulo;
+      if (d.heroSubtitulo) S.hero.subtitle = d.heroSubtitulo;
+      if (d.fotoHero) S.hero.image = d.fotoHero;
+      if (d.sobreNosotros) S.about.text = d.sobreNosotros;
+      if (d.fotoNosotros) { S.about.image = d.fotoNosotros; S.about.imageMode = 'frame'; }
+      if (d.mapsQuery) S.location.mapUrl = d.mapsQuery;
+      if (d.horario) {
+        S.location.items = String(d.horario).split('\n').filter(Boolean).map(function (l) {
+          var m = l.split(/:\s+|\s+[–-]\s+(?=\d)/);
+          return m.length > 1 ? { day: m[0].trim(), hours: l.slice(m[0].length).replace(/^[:\s–-]+/, '').trim() } : { day: l.trim(), hours: '' };
+        });
+      }
+      var icons = ['drop', 'flask', 'pill', 'microscope', 'shield', 'heart', 'virus', 'dna'];
+      if (d.servicios && d.servicios.length) S.services.items = d.servicios.map(function (x, i) {
+        return { icon: icons[i % icons.length], title: x.nombre || '', text: x.desc || '', image: '' };
+      });
+      if (d.testimonios && d.testimonios.length) S.testimonials.items = d.testimonios.map(function (x) {
+        return { name: x.nombre || 'Paciente', text: x.texto || '', rating: '5' };
+      });
+      if (d.stats && d.stats.length) S.stats.items = d.stats.slice(0, 4).map(function (x) {
+        var m = String(x.valor || '').match(/^([\d.,]+)(.*)$/);
+        return m ? { value: m[1].replace(',', '.'), suffix: m[2], label: x.etiqueta || '' } : { value: x.valor || '', suffix: '', label: x.etiqueta || '' };
+      });
+      changed(); draw();
+      window.Site.toast('Contenido importado desde BIOsoft', 'ok');
+    }).catch(function (e) {
+      setStatus('');
+      if (e && e.message !== 'cancel') window.Site.toast(e.message && e.message.indexOf('http_') !== 0 ? e.message : 'No se pudo conectar con BIOsoft.', 'err');
+    });
   }
 
   function renderResults(body) {
     var r = C().results;
-    body.innerHTML = '<p class="adm-note">Conecte aquí el software del laboratorio (BIOsoft u otro). Los pacientes ingresan tipo de documento, número y código de consulta.</p>' +
+    body.innerHTML = '<p class="adm-note">En modo BIOsoft, cada resultado que el laboratorio envía desde <b>Reportes → Enviar resultados</b> queda disponible aquí automáticamente. El paciente consulta con su documento y el código de 6 dígitos del comprobante, y ve también su historial.</p>' +
       RESULTS.map(function (f) { return field(f, r); }).join('') +
+      '<button type="button" class="adm-btn adm-btn--pri adm-btn--block" id="admImportBs">Importar marca y contenido desde BIOsoft</button>' +
       '<button type="button" class="adm-btn adm-btn--ghost adm-btn--block" id="admTestRes">Probar consulta en la página</button>';
     bindFields(body, RESULTS, r, draw);
     $('#admTestRes').onclick = function () { goTo('results'); };
+    $('#admImportBs').onclick = importBiosoft;
   }
 
   function renderOrder(body) {

@@ -203,7 +203,7 @@
       '<option value="CC">Cédula de ciudadanía</option><option value="TI">Tarjeta de identidad</option><option value="RC">Registro civil</option><option value="CE">Cédula de extranjería</option><option value="PA">Pasaporte</option><option value="PPT">Permiso de protección temporal</option>' +
       '</select></div></div>' +
       '<div class="field"><label for="rDoc">Número de documento</label><div class="input-ico">' + icon('id') + '<input id="rDoc" name="cedula" inputmode="numeric" placeholder="Ej: 1020304050" required maxlength="20"></div></div>' +
-      '<div class="field"><label for="rCode">Código de consulta</label><div class="input-ico">' + icon('key') + '<input id="rCode" name="codigo" placeholder="Código de su comprobante" required maxlength="40"></div>' +
+      '<div class="field"><label for="rCode">Código de consulta</label><div class="input-ico">' + icon('key') + '<input id="rCode" name="codigo" placeholder="Código de su comprobante" required maxlength="40" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase"></div>' +
       (r.help ? '<small class="hint">' + esc(r.help) + '</small>' : '') + '</div>' +
       '<label class="check"><input type="checkbox" id="rOk" required><span>Autorizo el tratamiento de mis datos personales según la Ley 1581 de 2012.</span></label>' +
       '<button class="btn btn--accent btn--block btn--lg" type="submit" id="rBtn">' + icon('file') + '<span>Consultar resultados</span></button>' +
@@ -313,6 +313,7 @@
     var m = raw.match(/src=["']([^"']+)["']/i);
     if (m) embed = m[1];
     else if (/\/maps\/embed|output=embed/.test(raw)) embed = raw;
+    else if (raw && !/^https?:\/\//.test(raw) && raw.indexOf('<') < 0) embed = 'https://www.google.com/maps?q=' + encodeURIComponent(raw) + '&z=16&output=embed';
     else if (/^https?:\/\//.test(raw)) {
       link = raw;
       var q = raw.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || raw.match(/[?&]q=([^&]+)/);
@@ -320,8 +321,9 @@
     }
     if (!/^https:\/\/(www\.)?google\.[a-z.]+\/maps/.test(embed)) embed = '';
     if (!embed && addr) embed = 'https://www.google.com/maps?q=' + encodeURIComponent(addr) + '&z=16&output=embed';
-    if (!link) link = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr);
-    return { embed: embed, link: link, waze: 'https://waze.com/ul?q=' + encodeURIComponent(addr) + '&navigate=yes' };
+    var dest = raw && !/^https?:|</.test(raw) ? raw : addr;
+    if (!link) link = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest);
+    return { embed: embed, link: link, waze: 'https://waze.com/ul?q=' + encodeURIComponent(dest) + '&navigate=yes' };
   }
 
   R.location = function (s) {
@@ -516,6 +518,18 @@
       return String(t).replace(/\{cedula\}/g, encodeURIComponent(ced)).replace(/\{codigo\}/g, encodeURIComponent(cod)).replace(/\{tipo\}/g, encodeURIComponent(tipo));
     }
 
+    if (r.mode === 'biosoft' && window.BIOSOFT) {
+      btn.disabled = true; btn.classList.add('loading');
+      window.BIOSOFT.getResult(cod, ced, (r.tenantId || '').trim())
+        .then(function (d) {
+          if (!d) { addAttempt(); return fail('No encontramos un resultado con esos datos. Verifique su número de documento y el código de su comprobante.'); }
+          showBiosoft(d);
+        })
+        .catch(function () { fail('No pudimos consultar su resultado en este momento. Intente de nuevo en unos minutos o escríbanos por WhatsApp.'); })
+        .then(function () { btn.disabled = false; btn.classList.remove('loading'); });
+      return;
+    }
+
     if (r.mode === 'url' && r.urlTemplate) {
       var url = fill(r.urlTemplate);
       if (r.openIn === 'tab') { window.open(url, '_blank', 'noopener'); return; }
@@ -549,6 +563,65 @@
     }, 900);
 
     function fail(t) { msg.textContent = t; msg.className = 'results-card__msg err'; }
+  }
+
+  /* ---------- resultado real de BIOsoft ---------- */
+  function fmtFecha(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  function showBiosoft(d) {
+    // El más reciente de todos (el consultado + su historial) va destacado arriba
+    var todas = [{ codigo: d.codigo, numeroOrden: d.numeroOrden, fechaOrden: d.fechaOrden, pdf: d.pdfDataUrl }]
+      .concat((d.historial || []).map(function (h) { return { codigo: h.codigo, numeroOrden: h.numeroOrden, fechaOrden: h.fechaOrden, pdf: null }; }));
+    todas.sort(function (a, b) { return String(b.fechaOrden || '').localeCompare(String(a.fechaOrden || '')); });
+    var main = todas[0], rest = todas.slice(1);
+    var small = window.matchMedia('(max-width: 760px)').matches;
+
+    function fileName(e) { return 'Resultado-' + (e.numeroOrden || e.codigo) + '.pdf'; }
+    function ensurePdf(e) {
+      if (e.pdf) return Promise.resolve(e.pdf);
+      return window.BIOSOFT.getPdf(e.codigo).then(function (p) { e.pdf = p; return p; });
+    }
+    function download(e, b) {
+      var t = b.innerHTML; b.disabled = true; b.textContent = 'Cargando…';
+      ensurePdf(e).then(function (p) {
+        if (!p) throw new Error('sin_pdf');
+        var a = D.createElement('a'); a.href = window.BIOSOFT.pdfBlobUrl(p); a.download = fileName(e);
+        D.body.appendChild(a); a.click(); a.remove();
+      }).catch(function () { toast('No se pudo descargar este resultado. Intente de nuevo.', 'err'); })
+        .then(function () { b.disabled = false; b.innerHTML = t; });
+    }
+
+    var hist = rest.length ? '<div class="bs-hist"><h4>' + icon('calendar') + 'Resultados anteriores</h4>' + rest.map(function (e, i) {
+      return '<div class="bs-hist__row"><div><b>Orden ' + esc(e.numeroOrden || e.codigo) + '</b><span>' + esc(fmtFecha(e.fechaOrden)) + '</span></div>' +
+        '<button type="button" class="btn btn--outline btn--sm" data-h="' + i + '">' + icon('file') + 'Descargar</button></div>';
+    }).join('') + '</div>' : '';
+
+    openModal('<div class="bs">' +
+      '<div class="bs__head"><span class="bs__ok">' + icon('check') + '</span><div><small>Resultado disponible</small><h3>' + esc(d.nombrePaciente || 'Paciente') + '</h3>' +
+      '<p>Orden No. ' + esc(main.numeroOrden || '—') + ' · ' + esc(fmtFecha(main.fechaOrden)) + '</p></div></div>' +
+      '<div class="bs__actions"><button type="button" class="btn btn--accent" id="bsDown">' + icon('file') + 'Descargar PDF</button>' +
+      '<button type="button" class="btn btn--ghost" id="bsOpen">' + icon('arrow') + 'Abrir en pestaña nueva</button></div>' +
+      (small ? '' : '<div class="bs__viewer" id="bsViewer"><div class="bs__loading">Cargando resultado…</div></div>') +
+      hist +
+      '<p class="bs__note">' + icon('lock') + '<span>Resultado validado por bacteriólogo. Ante cualquier duda, consulte a su médico tratante.</span></p>' +
+      '</div>', true);
+
+    $('#bsDown').onclick = function () { download(main, this); };
+    $('#bsOpen').onclick = function () {
+      var w = window.open('', '_blank');
+      ensurePdf(main).then(function (p) {
+        if (!p) throw new Error();
+        if (w) w.location.href = window.BIOSOFT.pdfBlobUrl(p); else download(main, $('#bsDown'));
+      }).catch(function () { if (w) w.close(); toast('No se pudo abrir el resultado.', 'err'); });
+    };
+    $$('[data-h]', $('#modalBody')).forEach(function (b) { b.onclick = function () { download(rest[+b.getAttribute('data-h')], b); }; });
+    if (!small) ensurePdf(main).then(function (p) {
+      var v = $('#bsViewer'); if (!v) return;
+      v.innerHTML = p ? '<iframe title="Resultado del paciente" src="' + window.BIOSOFT.pdfBlobUrl(p) + '#view=FitH"></iframe>' : '<div class="bs__loading">Use el botón «Descargar PDF» para ver su resultado.</div>';
+    });
   }
 
   function showFrame(url, patient) {

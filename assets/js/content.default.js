@@ -26,11 +26,12 @@ window.DEFAULT_CONTENT = {
   },
 
   results: {
-    mode: 'demo',
+    mode: 'biosoft',
+    tenantId: '',
     urlTemplate: 'https://resultados.ejemplo.com/consulta?documento={cedula}&codigo={codigo}',
     apiEndpoint: '',
     openIn: 'modal',
-    help: 'El código de consulta aparece en la factura o comprobante que recibió al momento de la toma de muestra.'
+    help: 'El código de consulta de 6 dígitos aparece en el comprobante que recibió al momento de la toma de muestra.'
   },
 
   order: ['hero', 'stats', 'results', 'services', 'about', 'quality', 'process', 'packages', 'home', 'team', 'partners', 'testimonials', 'prep', 'faq', 'location', 'contact'],
