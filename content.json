@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updated": 1793296644652,
+    "updated": 1793296760681,
     "version": 1
   },
   "brand": {
@@ -299,7 +299,7 @@
       "title": "Llevamos el laboratorio hasta su puerta",
       "text": "Ideal para adultos mayores, pacientes con movilidad reducida, niños y empresas. Agende su toma de muestra en casa u oficina con los mismos estándares de calidad de nuestra sede.",
       "cta": "Agendar toma a domicilio",
-      "image": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80",
+      "image": "uploads/a699abdc539cd467e7bf.webp",
       "imageMode": "frame",
       "overlay": 60
     },
