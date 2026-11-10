@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updated": 1793302334804,
+    "updated": 1794326665923,
     "version": 1
   },
   "brand": {
@@ -324,30 +324,45 @@
       "visible": true,
       "eyebrow": "Nuestro equipo",
       "title": "Profesionales que inspiran confianza",
-      "subtitle": "",
+      "subtitle": "Nuestro Equipo",
       "image": "",
-      "imageMode": "none",
+      "imageMode": "frame",
       "overlay": 60,
       "items": [
         {
-          "name": "Dra. Nombre Apellido",
-          "role": "Bioanalista · Directora científica",
-          "photo": ""
+          "name": "Lic. Jofre Duran",
+          "role": "Bioanalista · Director científico",
+          "photo": "uploads/7cd27176e2fa8d869aca.webp"
         },
         {
-          "name": "Nombre Apellido",
-          "role": "Bioanalista · Control de calidad",
-          "photo": ""
+          "name": "Lic. Yerselly Mariño",
+          "role": "Bioanalista ·",
+          "photo": "uploads/613048e2cc88882a7b80.webp"
         },
         {
-          "name": "Nombre Apellido",
-          "role": "Auxiliar de laboratorio",
-          "photo": ""
+          "name": "Lic. Yoeica Camacho",
+          "role": "Bioanalista",
+          "photo": "uploads/555a55f61c156125fc48.webp"
         },
         {
-          "name": "Nombre Apellido",
-          "role": "Atención al paciente",
-          "photo": ""
+          "name": "Lic. Brenda Sanabria",
+          "role": "Bioanalista",
+          "photo": "uploads/a37b60329ca787260651.webp"
+        },
+        {
+          "name": "Crismar Perez",
+          "role": "Asistente de Laboratorio",
+          "photo": "uploads/a7c6b87dbf2b7dab7ebc.webp"
+        },
+        {
+          "name": "Ana Esquivel",
+          "role": "Asistente de Laboratorio",
+          "photo": "uploads/d9e287e8aced237c7475.webp"
+        },
+        {
+          "name": "Haniel Camacho",
+          "role": "Asistente de Laboratorio",
+          "photo": "uploads/9237daf02ee9b016683a.webp"
         }
       ]
     },
